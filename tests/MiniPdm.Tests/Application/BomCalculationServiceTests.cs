@@ -87,3 +87,4 @@ public class BomCalculationServiceTests
         bolt.TotalMassKg.Should().Be(0.50m);
     }
 }
+

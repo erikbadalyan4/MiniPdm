@@ -14,3 +14,4 @@ public interface IBomQueryRepository
     /// </summary>
     Task<IReadOnlyList<BomHierarchyNode>> GetFirstLevelComponentsAsync(Guid assemblyVersionId, CancellationToken ct = default);
 }
+

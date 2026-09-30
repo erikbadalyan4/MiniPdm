@@ -55,3 +55,4 @@ public class BomDiffServiceTests
         diff.Changes.Should().Contain(c => c.Kind == BomDiffKind.Unchanged && c.ObjectId == partUnchanged.Id && c.NewQuantity == 5);
     }
 }
+

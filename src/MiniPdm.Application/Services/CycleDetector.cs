@@ -89,3 +89,4 @@ public sealed class CycleDetector : ICycleDetector
         return false;
     }
 }
+

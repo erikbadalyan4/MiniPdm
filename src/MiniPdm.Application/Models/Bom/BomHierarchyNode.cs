@@ -21,3 +21,4 @@ public sealed record BomHierarchyNode(
     Guid? ParentObjectId,
     Guid? ParentVersionId,
     string HierarchyPath);
+

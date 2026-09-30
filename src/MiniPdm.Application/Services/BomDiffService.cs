@@ -96,3 +96,4 @@ public sealed class BomDiffService : IBomDiffService
         return CompareVersions(oldLinks, newLinks, id => itemCache.GetValueOrDefault(id));
     }
 }
+

@@ -26,3 +26,4 @@ public interface IBomCalculationService
     /// </summary>
     Task<IReadOnlyList<ConsolidatedBomItem>> GetConsolidatedSpecificationAsync(Guid assemblyId, CancellationToken ct = default);
 }
+

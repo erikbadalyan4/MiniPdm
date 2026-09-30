@@ -82,3 +82,4 @@ public class CycleDetectorTests
         createsCycle.Should().BeTrue();
     }
 }
+

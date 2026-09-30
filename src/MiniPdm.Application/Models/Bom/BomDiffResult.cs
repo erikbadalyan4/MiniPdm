@@ -35,3 +35,4 @@ public sealed class BomDiffResult
         ModifiedCount = changes.Count(c => c.Kind == BomDiffKind.QuantityChanged);
     }
 }
+

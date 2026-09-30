@@ -21,3 +21,4 @@ public interface IBomDiffService
         Guid newVersionId,
         CancellationToken ct = default);
 }
+

@@ -15,3 +15,4 @@ public sealed class ImportReport
         WarningCount = items.Count(x => x.Severity == ImportSeverity.Warning);
     }
 }
+

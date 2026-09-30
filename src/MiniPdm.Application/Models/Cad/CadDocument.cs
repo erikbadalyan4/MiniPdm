@@ -8,3 +8,4 @@ public sealed record CadDocument(
     string Name,
     CadProperties Properties,
     IReadOnlyList<CadComponent> Components);
+

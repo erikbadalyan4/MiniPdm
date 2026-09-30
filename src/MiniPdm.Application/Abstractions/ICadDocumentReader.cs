@@ -10,3 +10,4 @@ public interface ICadDocumentReader
 {
     Task<CadDocument> ReadAsync(string path, CancellationToken ct = default);
 }
+

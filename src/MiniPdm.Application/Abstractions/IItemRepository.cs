@@ -17,3 +17,4 @@ public interface IItemRepository
     Task<ItemVersion?> GetVersionByIdAsync(Guid versionId, CancellationToken ct = default);
     Task<IReadOnlyList<BomLink>> GetBomLinksByVersionIdAsync(Guid versionId, CancellationToken ct = default);
 }
+

@@ -22,3 +22,4 @@ public interface ICycleDetector
         Guid childId,
         Func<Guid, IEnumerable<Guid>> childrenProvider);
 }
+

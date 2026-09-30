@@ -18,3 +18,4 @@ public sealed record ConsolidatedBomItem(
 {
     public decimal? TotalMassKg => UnitMassKg.HasValue ? UnitMassKg.Value * TotalQuantity : null;
 }
+

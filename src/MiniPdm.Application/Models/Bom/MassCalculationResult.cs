@@ -33,3 +33,4 @@ public sealed class MassCalculationResult
     public static MassCalculationResult Failure(string error) =>
         new(false, null, Array.Empty<string>(), error);
 }
+

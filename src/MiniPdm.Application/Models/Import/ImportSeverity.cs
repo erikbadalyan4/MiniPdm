@@ -6,3 +6,4 @@ public enum ImportSeverity
     Warning,
     Error
 }
+
