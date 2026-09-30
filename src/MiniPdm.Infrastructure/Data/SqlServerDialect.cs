@@ -121,3 +121,4 @@ public sealed class SqlServerDialect : ISqlDialect
         ORDER BY child.object_type, child.designation, child.name;
         """;
 }
+

@@ -23,3 +23,4 @@ public sealed class DatabaseInitializer : IDatabaseInitializer
         await connection.ExecuteAsync(new CommandDefinition(sql, cancellationToken: ct));
     }
 }
+

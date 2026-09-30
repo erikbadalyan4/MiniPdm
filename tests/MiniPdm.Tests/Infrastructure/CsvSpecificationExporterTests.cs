@@ -26,3 +26,4 @@ public class CsvSpecificationExporterTests
         csv.Should().Contain("Стандартное изделие;;Болт М8;;10;0,050;0,500");
     }
 }
+

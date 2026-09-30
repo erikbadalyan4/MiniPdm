@@ -1,0 +1,53 @@
+<Window x:Class="MiniPdm.UI.Views.ImportReportWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:MiniPdm.UI.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance vm:ImportReportViewModel}"
+        Title="Отчёт об импорте CAD-документов" Height="500" Width="800"
+        WindowStartupLocation="CenterOwner" FontFamily="Segoe UI">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Background="#F0F4F8" Padding="12" CornerRadius="4" Margin="0,0,0,10">
+            <TextBlock Text="{Binding SummaryText}" FontWeight="SemiBold" FontSize="14" Foreground="#1E3A8A"/>
+        </Border>
+
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Items}" AutoGenerateColumns="False" 
+                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                  AlternatingRowBackground="#FAFAFA" BorderBrush="#E2E8F0" RowHeight="28">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Файл" Binding="{Binding FileName}" Width="250"/>
+                <DataGridTextColumn Header="Результат" Binding="{Binding Severity}" Width="120">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <Trigger Property="Text" Value="Error">
+                                    <Setter Property="Foreground" Value="#DC2626"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Trigger>
+                                <Trigger Property="Text" Value="Warning">
+                                    <Setter Property="Foreground" Value="#D97706"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Trigger>
+                                <Trigger Property="Text" Value="Success">
+                                    <Setter Property="Foreground" Value="#16A34A"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Причина / Сообщение" Binding="{Binding Reason}" Width="*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Button Grid.Row="2" Content="Закрыть" Width="100" Height="30" HorizontalAlignment="Right" 
+                Margin="0,10,0,0" IsCancel="True" Click="CloseButton_Click"/>
+    </Grid>
+</Window>

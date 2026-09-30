@@ -97,3 +97,4 @@ public sealed class DapperBomQueryRepository : IBomQueryRepository
         public string? HierarchyPath { get; set; }
     }
 }
+

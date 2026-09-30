@@ -47,3 +47,4 @@ public class JsonCadDocumentReaderTests
         doc.Components.Should().BeEmpty();
     }
 }
+

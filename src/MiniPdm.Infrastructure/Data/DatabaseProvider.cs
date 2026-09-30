@@ -5,3 +5,4 @@ public enum DatabaseProvider
     PostgreSql,
     SqlServer
 }
+

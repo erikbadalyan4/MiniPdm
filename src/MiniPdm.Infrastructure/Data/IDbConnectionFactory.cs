@@ -10,3 +10,4 @@ public interface IDbConnectionFactory
     DbConnection CreateConnection();
     Task<DbConnection> CreateOpenConnectionAsync(CancellationToken ct = default);
 }
+

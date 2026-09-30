@@ -1,0 +1,83 @@
+<Window x:Class="MiniPdm.UI.Views.BomDiffWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:MiniPdm.UI.ViewModels"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance vm:BomDiffViewModel}"
+        Title="Сравнение версий сборочной единицы" Height="500" Width="800"
+        WindowStartupLocation="CenterOwner" FontFamily="Segoe UI">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="{Binding AssemblyName, StringFormat='Сборка: {0}'}" FontWeight="Bold" FontSize="15" Margin="0,0,0,10"/>
+
+        <!-- Селекторы версий -->
+        <Border Grid.Row="1" Background="#F1F5F9" Padding="10" CornerRadius="4" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="Версия А:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <ComboBox Grid.Column="1" ItemsSource="{Binding AvailableVersions}" SelectedItem="{Binding SelectedVersion1}"
+                          DisplayMemberPath="VersionNumber"/>
+
+                <TextBlock Grid.Column="2" Text="→" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
+
+                <TextBlock Grid.Column="3" Text="Версия Б:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <ComboBox Grid.Column="4" ItemsSource="{Binding AvailableVersions}" SelectedItem="{Binding SelectedVersion2}"
+                          DisplayMemberPath="VersionNumber"/>
+
+                <TextBlock Grid.Column="5" Text="{Binding SummaryText}" VerticalAlignment="Center" Margin="15,0,0,0" FontWeight="SemiBold" Foreground="#334155"/>
+            </Grid>
+        </Border>
+
+        <!-- Таблица различий -->
+        <DataGrid Grid.Row="2" ItemsSource="{Binding Changes}" AutoGenerateColumns="False" 
+                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                  AlternatingRowBackground="#FAFAFA" BorderBrush="#E2E8F0" RowHeight="28">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Действие" Binding="{Binding Kind}" Width="140">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <Trigger Property="Text" Value="Added">
+                                    <Setter Property="Foreground" Value="#16A34A"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Trigger>
+                                <Trigger Property="Text" Value="Removed">
+                                    <Setter Property="Foreground" Value="#DC2626"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Trigger>
+                                <Trigger Property="Text" Value="QuantityChanged">
+                                    <Setter Property="Foreground" Value="#2563EB"/>
+                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Тип" Binding="{Binding Type}" Width="120"/>
+                <DataGridTextColumn Header="Обозначение" Binding="{Binding Designation.Value}" Width="150"/>
+                <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*"/>
+                <DataGridTextColumn Header="Было (шт)" Binding="{Binding OldQuantity}" Width="90"/>
+                <DataGridTextColumn Header="Стало (шт)" Binding="{Binding NewQuantity}" Width="90"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Button Grid.Row="3" Content="Закрыть" Width="100" Height="30" HorizontalAlignment="Right" 
+                Margin="0,10,0,0" IsCancel="True" Click="CloseButton_Click"/>
+    </Grid>
+</Window>

@@ -5,6 +5,10 @@
     <ProjectReference Include="..\MiniPdm.Infrastructure\MiniPdm.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Jab" Version="0.12.0" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>

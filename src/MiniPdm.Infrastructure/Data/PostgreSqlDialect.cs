@@ -116,3 +116,4 @@ public sealed class PostgreSqlDialect : ISqlDialect
         ORDER BY child.object_type, child.designation, child.name;
         """;
 }
+

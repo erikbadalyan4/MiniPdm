@@ -7,3 +7,4 @@ public interface ISqlDialect
     string GetRecursiveBomCteSql();
     string GetFirstLevelComponentsSql();
 }
+

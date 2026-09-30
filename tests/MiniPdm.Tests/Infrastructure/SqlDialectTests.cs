@@ -27,3 +27,4 @@ public class SqlDialectTests
         dialect.GetFirstLevelComponentsSql().Should().Contain("FROM bom_link bl");
     }
 }
+
