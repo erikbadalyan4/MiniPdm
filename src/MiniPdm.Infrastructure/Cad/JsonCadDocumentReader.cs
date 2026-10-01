@@ -19,30 +19,38 @@ public sealed class JsonCadDocumentReader : ICadDocumentReader
         if (!File.Exists(path))
             throw new FileNotFoundException($"Файл документа не найден: {path}");
 
-        await using var stream = File.OpenRead(path);
-        var dto = await JsonSerializer.DeserializeAsync<CadFileDto>(stream, SerializerOptions, ct);
+        try
+        {
+            await using var stream = File.OpenRead(path);
+            var dto = await JsonSerializer.DeserializeAsync<CadFileDto>(stream, SerializerOptions, ct);
 
-        if (dto == null)
-            throw new InvalidOperationException($"Не удалось десериализовать документ: {path}");
+            if (dto == null)
+                throw new InvalidOperationException($"Не удалось десериализовать документ: {path}");
 
-        var components = (dto.Components ?? Enumerable.Empty<CadComponentDto>())
-            .Select(c => new CadComponent(c.File ?? string.Empty, c.Count))
-            .ToList();
+            var components = (dto.Components ?? Enumerable.Empty<CadComponentDto>())
+                .Select(c => new CadComponent(c.File ?? string.Empty, c.Count))
+                .ToList();
 
-        var props = new CadProperties(dto.Properties?.Material, dto.Properties?.Mass);
+            var props = new CadProperties(dto.Properties?.Material, dto.Properties?.Mass);
 
-        var fileName = !string.IsNullOrWhiteSpace(dto.FileName)
-            ? dto.FileName
-            : Path.GetFileName(path);
+            var fileName = !string.IsNullOrWhiteSpace(dto.FileName)
+                ? dto.FileName
+                : Path.GetFileName(path);
 
-        return new CadDocument(
-            dto.FormatVersion,
-            fileName,
-            dto.Type ?? string.Empty,
-            dto.Designation,
-            dto.Name ?? string.Empty,
-            props,
-            components);
+            return new CadDocument(
+                dto.FormatVersion,
+                fileName,
+                dto.Type ?? string.Empty,
+                dto.Designation,
+                dto.Name ?? string.Empty,
+                props,
+                components);
+        }
+        catch (JsonException ex)
+        {
+            var lineInfo = ex.LineNumber.HasValue ? $" на строке {ex.LineNumber.Value}" : string.Empty;
+            throw new FormatException($"Файл повреждён: некорректная структура JSON{lineInfo} (документ не завершён или нарушен синтаксис)", ex);
+        }
     }
 
     private sealed class CadFileDto

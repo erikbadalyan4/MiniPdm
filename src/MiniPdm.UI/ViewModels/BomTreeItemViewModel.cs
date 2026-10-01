@@ -12,6 +12,7 @@ public sealed class BomTreeItemViewModel : ViewModelBase
     private static readonly BomTreeItemViewModel DummyChild = new(Guid.Empty, ItemType.Part, null, "Загрузка...", null, 0);
 
     private readonly IBomQueryRepository? _queryRepository;
+    private readonly bool _isRoot;
     private bool _isExpanded;
     private bool _isSelected;
     private bool _isLoaded;
@@ -22,6 +23,7 @@ public sealed class BomTreeItemViewModel : ViewModelBase
     public string Name { get; }
     public Guid? CurrentVersionId { get; }
     public int Quantity { get; }
+    public bool IsRoot => _isRoot;
 
     public ObservableCollection<BomTreeItemViewModel> Children { get; } = new();
 
@@ -30,7 +32,7 @@ public sealed class BomTreeItemViewModel : ViewModelBase
         get
         {
             var prefix = Designation.HasValue ? $"{Designation.Value} " : string.Empty;
-            var qty = Quantity > 0 ? $" (x{Quantity})" : string.Empty;
+            var qty = (!_isRoot && Quantity > 0) ? $" ×{Quantity}" : string.Empty;
             return $"{prefix}{Name}{qty}";
         }
     }
@@ -68,7 +70,8 @@ public sealed class BomTreeItemViewModel : ViewModelBase
         string name,
         Guid? currentVersionId,
         int quantity = 1,
-        IBomQueryRepository? queryRepository = null)
+        IBomQueryRepository? queryRepository = null,
+        bool isRoot = false)
     {
         ObjectId = objectId;
         Type = type;
@@ -77,6 +80,7 @@ public sealed class BomTreeItemViewModel : ViewModelBase
         CurrentVersionId = currentVersionId;
         Quantity = quantity;
         _queryRepository = queryRepository;
+        _isRoot = isRoot;
 
         // Если это сборочная единица, добавляем dummy child для отображения стрелочки разворачивания
         if (type == ItemType.Assembly && currentVersionId.HasValue)

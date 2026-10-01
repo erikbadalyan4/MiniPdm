@@ -29,7 +29,7 @@ public sealed class MainViewModel : ViewModelBase
     private CancellationTokenSource? _importCts;
 
     public ObservableCollection<BomTreeItemViewModel> RootItems { get; } = new();
-    public ObservableCollection<BomHierarchyNode> FirstLevelComponents { get; } = new();
+    public ObservableCollection<FirstLevelComponentViewModel> FirstLevelComponents { get; } = new();
     public ItemDetailsViewModel Details { get; }
 
     public string SearchQuery
@@ -81,17 +81,19 @@ public sealed class MainViewModel : ViewModelBase
         set => SetProperty(ref _importStatusText, value);
     }
 
+    public bool CanCalculateMass => SelectedTreeItem != null && SelectedTreeItem.Type == ItemType.Assembly;
     public bool CanOpenSpecification => SelectedTreeItem != null && SelectedTreeItem.Type == ItemType.Assembly;
     public bool CanOpenDiff => SelectedTreeItem != null && SelectedTreeItem.Type == ItemType.Assembly && Details.Item?.Versions.Count > 1;
 
     public ICommand RefreshCommand { get; }
     public ICommand ImportFolderCommand { get; }
     public ICommand CancelImportCommand { get; }
+    public ICommand CalculateMassCommand { get; }
     public ICommand OpenSpecificationCommand { get; }
     public ICommand OpenDiffCommand { get; }
 
     // Делегаты для отображения окон из View (без смешивания с code-behind)
-    public Action<ImportReport>? ShowImportReportAction { get; set; }
+    public Action<ImportReport, string>? ShowImportReportAction { get; set; }
     public Action<Guid, string>? ShowSpecificationAction { get; set; }
     public Action<Item>? ShowDiffAction { get; set; }
     public Func<string?>? SelectFolderAction { get; set; }
@@ -116,6 +118,7 @@ public sealed class MainViewModel : ViewModelBase
         RefreshCommand = new AsyncRelayCommand(LoadRootItemsAsync);
         ImportFolderCommand = new AsyncRelayCommand(ImportFolderAsync, () => !IsImporting);
         CancelImportCommand = new RelayCommand(CancelImport, () => IsImporting);
+        CalculateMassCommand = new AsyncRelayCommand(CalculateMassAsync, () => CanCalculateMass);
         OpenSpecificationCommand = new RelayCommand(OpenSpecification, () => CanOpenSpecification);
         OpenDiffCommand = new RelayCommand(OpenDiff, () => CanOpenDiff);
     }
@@ -154,7 +157,8 @@ public sealed class MainViewModel : ViewModelBase
                     item.Name,
                     item.CurrentVersionId,
                     quantity: 1,
-                    _queryRepository);
+                    _queryRepository,
+                    isRoot: true);
 
                 RootItems.Add(vm);
             }
@@ -170,10 +174,37 @@ public sealed class MainViewModel : ViewModelBase
         }
     }
 
+    private async Task CalculateMassAsync()
+    {
+        if (SelectedTreeItem == null || SelectedTreeItem.Type != ItemType.Assembly)
+            return;
+
+        try
+        {
+            var result = await _calculationService.CalculateAssemblyMassAsync(SelectedTreeItem.ObjectId);
+            if (result.IsSuccess && result.TotalMassKg.HasValue)
+            {
+                Details.SetCalculatedMass(result.TotalMassKg.Value);
+            }
+            else
+            {
+                Details.SetMassMessage(result.ErrorMessage ?? "Отсутствует масса у компонентов");
+            }
+        }
+        catch (Exception ex)
+        {
+            Details.SetMassMessage($"Ошибка расчёта: {ex.Message}");
+        }
+    }
+
     private async Task OnTreeItemSelectedAsync(BomTreeItemViewModel? treeItem)
     {
+        OnPropertyChanged(nameof(CanCalculateMass));
         OnPropertyChanged(nameof(CanOpenSpecification));
         OnPropertyChanged(nameof(CanOpenDiff));
+        (CalculateMassCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
+        (OpenSpecificationCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (OpenDiffCommand as RelayCommand)?.RaiseCanExecuteChanged();
 
         if (treeItem == null)
         {
@@ -191,7 +222,11 @@ public sealed class MainViewModel : ViewModelBase
         {
             var components = await _queryRepository.GetFirstLevelComponentsAsync(version.Id);
             foreach (var comp in components)
-                FirstLevelComponents.Add(comp);
+            {
+                var desig = comp.Designation.HasValue ? comp.Designation.Value.Value : "—";
+                var mass = comp.MassKg.HasValue ? $"{comp.MassKg.Value:0.##}".Replace('.', ',') : "—";
+                FirstLevelComponents.Add(new FirstLevelComponentViewModel(desig, comp.Name, comp.Quantity, mass));
+            }
         }
 
         OnPropertyChanged(nameof(CanOpenDiff));
@@ -228,7 +263,7 @@ public sealed class MainViewModel : ViewModelBase
             var report = await _importService.ImportFolderAsync(folder, progressHandler, _importCts.Token);
             ImportStatusText = $"Импорт завершен: принято {report.AcceptedCount}, ошибок {report.RejectedCount}";
             await LoadRootItemsAsync();
-            ShowImportReportAction?.Invoke(report);
+            ShowImportReportAction?.Invoke(report, folder);
         }
         catch (OperationCanceledException)
         {

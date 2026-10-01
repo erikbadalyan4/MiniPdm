@@ -49,9 +49,9 @@ public partial class MainWindow : Window
             return dialog.ShowDialog() == true ? dialog.FolderName : null;
         };
 
-        _viewModel.ShowImportReportAction = report =>
+        _viewModel.ShowImportReportAction = (report, folder) =>
         {
-            var vm = new ImportReportViewModel(report);
+            var vm = new ImportReportViewModel(report, folder);
             var win = new ImportReportWindow(vm) { Owner = this };
             win.ShowDialog();
         };

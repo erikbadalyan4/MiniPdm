@@ -6,195 +6,443 @@
         xmlns:vm="clr-namespace:MiniPdm.UI.ViewModels"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:MainViewModel}"
-        Title="Мини-PDM: Состав изделия (АСКОН)" Height="750" Width="1150"
-        WindowStartupLocation="CenterScreen" FontFamily="Segoe UI">
+        Title="Мини-PDM — Состав изделия" Height="720" Width="1080"
+        WindowStartupLocation="CenterScreen" Background="White" FontFamily="Segoe UI">
+    
+    <Window.InputBindings>
+        <KeyBinding Key="F5" Command="{Binding RefreshCommand}"/>
+    </Window.InputBindings>
+
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+
+        <!-- Стилизация кнопок со скруглением -->
+        <Style x:Key="RoundedButtonStyle" TargetType="Button">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.9"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.8"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.5"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Стилизация заголовка таблицы состава -->
+        <Style x:Key="CompositionHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#F1F5F9"/>
+            <Setter Property="Foreground" Value="#0F172A"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border Background="{TemplateBinding Background}" BorderThickness="0" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Стилизация строк таблицы -->
+        <Style x:Key="CompositionRowStyle" TargetType="DataGridRow">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F8FAFC"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#EFF6FF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Стилизация ячеек таблицы -->
+        <Style x:Key="CompositionCellStyle" TargetType="DataGridCell">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Foreground" Value="#0F172A"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="Transparent" BorderThickness="0" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Стилизация дерева состава изделия: стрелочки ▶ / ▼ и пилюля выделения #DBEAFE -->
+        <Style x:Key="ModernTreeViewItemStyle" TargetType="TreeViewItem">
+            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
+            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TreeViewItem">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <Border x:Name="Bd"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="0"
+                                    CornerRadius="4"
+                                    Padding="4,3">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="16"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ToggleButton x:Name="Expander"
+                                                  Focusable="False"
+                                                  IsChecked="{Binding Path=IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
+                                                  ClickMode="Press"
+                                                  VerticalAlignment="Center">
+                                        <ToggleButton.Template>
+                                            <ControlTemplate TargetType="ToggleButton">
+                                                <Border Background="Transparent" Width="14" Height="14">
+                                                    <TextBlock x:Name="Arrow" Text="▶" FontSize="8" 
+                                                               Foreground="#475569" HorizontalAlignment="Center" 
+                                                               VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsChecked" Value="True">
+                                                        <Setter TargetName="Arrow" Property="Text" Value="▼"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </ToggleButton.Template>
+                                    </ToggleButton>
+                                    <ContentPresenter Grid.Column="1" x:Name="PART_Header"
+                                                      ContentSource="Header"
+                                                      HorizontalAlignment="Left"
+                                                      VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+                            <ItemsPresenter Grid.Row="1" x:Name="ItemsHost" Margin="16,0,0,0"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="HasItems" Value="False">
+                                <Setter TargetName="Expander" Property="Visibility" Value="Hidden"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#F1F5F9"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#DBEAFE"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
+            <!-- 0: Верхняя строка заголовка с точками -->
+            <RowDefinition Height="38"/>
+            <!-- 1: Панель действий с кнопками и поиском -->
+            <RowDefinition Height="54"/>
+            <!-- 2: Основная рабочая область -->
             <RowDefinition Height="*"/>
+            <!-- 3: Нижняя строка прогресса при импорте (скрыта в обычном режиме) -->
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Верхняя панель действий -->
-        <Border Grid.Row="0" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="10">
-            <Grid>
+        <!-- Верхняя полоса: Заголовок и 3 цветные точки -->
+        <Border Grid.Row="0" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="16,0">
+            <Grid VerticalAlignment="Center">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="260"/>
-                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="Поиск:" VerticalAlignment="Center" Margin="0,0,8,0" FontWeight="SemiBold"/>
-                <TextBox Grid.Column="1" Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
-                         Height="28" VerticalContentAlignment="Center" Padding="5,0"/>
+                <TextBlock Grid.Column="0" Text="Мини-PDM — Состав изделия" FontWeight="Bold" FontSize="13.5" Foreground="#0F172A" VerticalAlignment="Center"/>
 
-                <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="Импорт папки CAD..." Command="{Binding ImportFolderCommand}" 
-                            Height="30" Padding="12,0" Margin="0,0,8,0" FontWeight="SemiBold"/>
-                    <Button Content="Сводная спецификация..." Command="{Binding OpenSpecificationCommand}" 
-                            Height="30" Padding="12,0" Margin="0,0,8,0"/>
-                    <Button Content="Сравнение версий..." Command="{Binding OpenDiffCommand}" 
-                            Height="30" Padding="12,0" Margin="0,0,8,0"/>
-                    <Button Content="Обновить" Command="{Binding RefreshCommand}" 
-                            Height="30" Padding="12,0"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Ellipse Width="11" Height="11" Fill="#F87171" Margin="0,0,6,0"/>
+                    <Ellipse Width="11" Height="11" Fill="#FBBF24" Margin="0,0,6,0"/>
+                    <Ellipse Width="11" Height="11" Fill="#4ADE80"/>
                 </StackPanel>
             </Grid>
         </Border>
 
-        <!-- Основная рабочая область -->
-        <Grid Grid.Row="1" Margin="10">
+        <!-- Панель действий: кнопки и поиск -->
+        <Border Grid.Row="1" Background="White" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1" Padding="16,0">
+            <Grid VerticalAlignment="Center">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Левая группа кнопок -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Импорт папки... -->
+                    <Button Content="Импорт папки..." Command="{Binding ImportFolderCommand}"
+                            Style="{StaticResource RoundedButtonStyle}"
+                            Background="#2563EB" Foreground="White" FontWeight="SemiBold" FontSize="13"
+                            Height="32" Padding="16,0"/>
+
+                    <!-- Рассчитать массу -->
+                    <Button Content="Рассчитать массу" Command="{Binding CalculateMassCommand}"
+                            Style="{StaticResource RoundedButtonStyle}"
+                            Background="White" BorderBrush="#CBD5E1" BorderThickness="1" Foreground="#0F172A" FontSize="13"
+                            Height="32" Padding="16,0" Margin="8,0,0,0"/>
+
+                    <!-- Сводная спецификация -->
+                    <Button Content="Сводная спецификация" Command="{Binding OpenSpecificationCommand}"
+                            Style="{StaticResource RoundedButtonStyle}"
+                            Background="White" BorderBrush="#CBD5E1" BorderThickness="1" Foreground="#0F172A" FontSize="13"
+                            Height="32" Padding="16,0" Margin="8,0,0,0"/>
+                </StackPanel>
+
+                <!-- Правое поле поиска -->
+                <Border Grid.Column="2" Height="32" Width="280" BorderBrush="#CBD5E1" BorderThickness="1"
+                        CornerRadius="6" Background="White" Padding="10,0" VerticalAlignment="Center">
+                    <Grid VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Иконка лупы -->
+                        <TextBlock Grid.Column="0" Text="🔍" FontSize="12" Foreground="#94A3B8" 
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+
+                        <!-- Текстовое поле ввода -->
+                        <TextBox Grid.Column="1" x:Name="SearchBox"
+                                 Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}"
+                                 BorderThickness="0" Background="Transparent"
+                                 FontSize="12.5" Foreground="#0F172A" VerticalContentAlignment="Center"/>
+
+                        <!-- Плейсхолдер -->
+                        <TextBlock Grid.Column="1" Text="Обозначение или наименование"
+                                   Foreground="#94A3B8" FontSize="12.5" VerticalAlignment="Center"
+                                   IsHitTestVisible="False">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=SearchBox}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Основная рабочая область: Дерево слева и Карточка справа -->
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="380" MinWidth="250"/>
-                <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="*" MinWidth="400"/>
+                <ColumnDefinition Width="360" MinWidth="260"/>
+                <ColumnDefinition Width="1"/>
+                <ColumnDefinition Width="*" MinWidth="450"/>
             </Grid.ColumnDefinitions>
 
-            <!-- Левая панель: Дерево состава -->
-            <Border Grid.Column="0" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Background="White">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <Border Grid.Row="0" Background="#F1F5F9" Padding="10,8" CornerRadius="4,4,0,0">
-                        <TextBlock Text="Дерево состава изделия" FontWeight="SemiBold" Foreground="#334155"/>
-                    </Border>
-
-                    <TreeView Grid.Row="1" ItemsSource="{Binding RootItems}" BorderThickness="0" Margin="4">
-                        <TreeView.ItemContainerStyle>
-                            <Style TargetType="TreeViewItem">
-                                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}"/>
-                                <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}"/>
-                            </Style>
-                        </TreeView.ItemContainerStyle>
-                        <TreeView.ItemTemplate>
-                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                                <StackPanel Orientation="Horizontal" Margin="2">
-                                    <TextBlock Text="{Binding DisplayText}" FontWeight="Normal"/>
-                                </StackPanel>
-                            </HierarchicalDataTemplate>
-                        </TreeView.ItemTemplate>
-                    </TreeView>
-                </Grid>
-            </Border>
-
-            <!-- Сплиттер -->
-            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="Transparent"/>
-
-            <!-- Правая панель: Свойства объекта и состав 1-го уровня -->
-            <Grid Grid.Column="2">
+            <!-- Левая колонка: Состав изделия -->
+            <Grid Grid.Column="0" Margin="16,16,16,16">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
-                <!-- Карточка объекта -->
-                <Border Grid.Row="0" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" 
-                        Background="White" Margin="0,0,0,10" Padding="12">
-                    <Grid>
+                <TextBlock Grid.Row="0" Text="Состав изделия" FontWeight="Bold" FontSize="14" Foreground="#0F172A" Margin="0,0,0,12"/>
+
+                <TreeView Grid.Row="1" ItemsSource="{Binding RootItems}" BorderThickness="0" Background="Transparent"
+                          ItemContainerStyle="{StaticResource ModernTreeViewItemStyle}">
+                    <TreeView.ContextMenu>
+                        <ContextMenu>
+                            <MenuItem Header="Рассчитать массу" Command="{Binding CalculateMassCommand}"/>
+                            <MenuItem Header="Сводная спецификация..." Command="{Binding OpenSpecificationCommand}"/>
+                            <MenuItem Header="Сравнение версий..." Command="{Binding OpenDiffCommand}"/>
+                            <Separator/>
+                            <MenuItem Header="Обновить дерево (F5)" Command="{Binding RefreshCommand}"/>
+                        </ContextMenu>
+                    </TreeView.ContextMenu>
+                    <TreeView.ItemTemplate>
+                        <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                            <TextBlock Text="{Binding DisplayText}" FontSize="13" Foreground="#0F172A" VerticalAlignment="Center"/>
+                        </HierarchicalDataTemplate>
+                    </TreeView.ItemTemplate>
+                </TreeView>
+            </Grid>
+
+            <!-- Вертикальная разделительная линия -->
+            <Border Grid.Column="1" Background="#E2E8F0"/>
+
+            <!-- Правая колонка: Карточка выбранного объекта и Состав (1-й уровень) -->
+            <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <Grid Margin="24,16,24,16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Заголовок и подзаголовок объекта -->
+                    <StackPanel Grid.Row="0" Margin="0,0,0,16">
+                        <TextBlock Text="{Binding Details.Name}" FontWeight="Bold" FontSize="20" Foreground="#0F172A" Margin="0,0,0,4"/>
+                        <TextBlock Text="{Binding Details.Subtitle}" FontSize="12.5" Foreground="#64748B"/>
+                    </StackPanel>
+
+                    <!-- Карточка полей объекта -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Text="Карточка выбранного объекта" FontWeight="Bold" FontSize="14" Margin="0,0,0,10"/>
-
-                        <Grid Grid.Row="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="140"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="120"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="24"/>
-                                <RowDefinition Height="24"/>
-                                <RowDefinition Height="24"/>
-                            </Grid.RowDefinitions>
-
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Обозначение:" Foreground="#64748B"/>
-                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Details.Designation}" FontWeight="SemiBold"/>
-
-                            <TextBlock Grid.Row="0" Grid.Column="2" Text="Версия:" Foreground="#64748B"/>
-                            <TextBlock Grid.Row="0" Grid.Column="3" Text="{Binding Details.VersionNumber}" FontWeight="SemiBold"/>
-
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Наименование:" Foreground="#64748B"/>
-                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Details.Name}" FontWeight="SemiBold"/>
-
-                            <TextBlock Grid.Row="1" Grid.Column="2" Text="Состояние:" Foreground="#64748B"/>
-                            <TextBlock Grid.Row="1" Grid.Column="3" Text="{Binding Details.StateName}" FontWeight="SemiBold" Foreground="#2563EB"/>
-
-                            <TextBlock Grid.Row="2" Grid.Column="0" Text="Тип объекта:" Foreground="#64748B"/>
-                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding Details.TypeName}"/>
-
-                            <TextBlock Grid.Row="2" Grid.Column="2" Text="Масса 1 шт:" Foreground="#64748B"/>
-                            <TextBlock Grid.Row="2" Grid.Column="3" Text="{Binding Details.MassKg}"/>
-                        </Grid>
-
-                        <!-- Панель кнопок смены состояний -->
-                        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,12,0,0">
-                            <Button Content="Утвердить" Command="{Binding Details.ApproveCommand}" 
-                                    Height="28" Padding="12,0" Margin="0,0,8,0" Background="#DCFCE7" BorderBrush="#86EFAC"/>
-                            <Button Content="Аннулировать" Command="{Binding Details.ObsoleteCommand}" 
-                                    Height="28" Padding="12,0" Margin="0,0,8,0" Background="#FEE2E2" BorderBrush="#FCA5A5"/>
-                            <Button Content="Создать новую версию" Command="{Binding Details.CreateNewVersionCommand}" 
-                                    Height="28" Padding="12,0"/>
-                        </StackPanel>
-                    </Grid>
-                </Border>
-
-                <!-- Состав 1-го уровня -->
-                <Border Grid.Row="1" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Background="White">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-
-                        <Border Grid.Row="0" Background="#F1F5F9" Padding="10,8" CornerRadius="4,4,0,0">
-                            <TextBlock Text="Состав первого уровня (непосредственные вхождения)" FontWeight="SemiBold" Foreground="#334155"/>
+                        <!-- Обозначение -->
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Обозначение" VerticalAlignment="Center" Foreground="#334155" FontSize="13" Margin="0,0,0,8"/>
+                        <Border Grid.Row="0" Grid.Column="1" Height="32" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Background="White" Margin="0,0,0,8" Padding="10,0">
+                            <TextBlock Text="{Binding Details.Designation}" VerticalAlignment="Center" Foreground="#0F172A" FontSize="13"/>
                         </Border>
 
-                        <DataGrid Grid.Row="1" ItemsSource="{Binding FirstLevelComponents}" AutoGenerateColumns="False" 
-                                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                                  AlternatingRowBackground="#FAFAFA" BorderThickness="0" RowHeight="28">
-                            <DataGrid.Columns>
-                                <DataGridTextColumn Header="Тип" Binding="{Binding Type}" Width="120"/>
-                                <DataGridTextColumn Header="Обозначение" Binding="{Binding Designation.Value}" Width="150"/>
-                                <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*"/>
-                                <DataGridTextColumn Header="Количество" Binding="{Binding Quantity}" Width="90"/>
-                                <DataGridTextColumn Header="Масса 1 шт (кг)" Binding="{Binding MassKg, StringFormat='{}{0:F3}'}" Width="110"/>
-                                <DataGridTextColumn Header="Материал" Binding="{Binding Material}" Width="120"/>
-                            </DataGrid.Columns>
-                        </DataGrid>
+                        <!-- Наименование -->
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Наименование" VerticalAlignment="Center" Foreground="#334155" FontSize="13" Margin="0,0,0,8"/>
+                        <Border Grid.Row="1" Grid.Column="1" Height="32" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Background="White" Margin="0,0,0,8" Padding="10,0">
+                            <TextBlock Text="{Binding Details.Name}" VerticalAlignment="Center" Foreground="#0F172A" FontSize="13"/>
+                        </Border>
+
+                        <!-- Тип -->
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Тип" VerticalAlignment="Center" Foreground="#334155" FontSize="13" Margin="0,0,0,8"/>
+                        <Border Grid.Row="2" Grid.Column="1" Height="32" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Background="White" Margin="0,0,0,8" Padding="10,0">
+                            <TextBlock Text="{Binding Details.TypeName}" VerticalAlignment="Center" Foreground="#0F172A" FontSize="13"/>
+                        </Border>
+
+                        <!-- Версия -->
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Версия" VerticalAlignment="Center" Foreground="#334155" FontSize="13" Margin="0,0,0,8"/>
+                        <Border Grid.Row="3" Grid.Column="1" Height="32" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Background="White" Margin="0,0,0,8" Padding="10,0">
+                            <TextBlock Text="{Binding Details.VersionNumber}" VerticalAlignment="Center" Foreground="#0F172A" FontSize="13"/>
+                        </Border>
+
+                        <!-- Масса, кг -->
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Масса, кг" VerticalAlignment="Center" Foreground="#334155" FontSize="13" Margin="0,0,0,8"/>
+                        <Border Grid.Row="4" Grid.Column="1" Height="32" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="4" Background="White" Margin="0,0,0,8" Padding="10,0">
+                            <TextBlock Text="{Binding Details.MassDisplay}" VerticalAlignment="Center" Foreground="#0F172A" FontSize="13"/>
+                        </Border>
+
+                        <!-- Состояние -->
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Состояние" VerticalAlignment="Center" Foreground="#334155" FontSize="13"/>
+                        <StackPanel Grid.Row="5" Grid.Column="1" Orientation="Horizontal">
+                            <!-- Выпадающий список состояния -->
+                            <Border Height="32" Width="180" BorderBrush="#CBD5E1" BorderThickness="1" CornerRadius="4" Background="White" Padding="10,0">
+                                <Grid VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Details.StateName}" VerticalAlignment="Center" Foreground="#0F172A" FontSize="13"/>
+                                    <TextBlock Text="▼" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="8" Foreground="#64748B"/>
+                                </Grid>
+                            </Border>
+
+                            <!-- Кнопка Утвердить -->
+                            <Button Content="Утвердить" Command="{Binding Details.ApproveCommand}"
+                                    Style="{StaticResource RoundedButtonStyle}"
+                                    Height="32" Padding="18,0" Margin="10,0,0,0"
+                                    Background="#2563EB" Foreground="White" FontWeight="SemiBold" FontSize="13"
+                                    BorderThickness="0"/>
+
+                            <!-- Кнопка Аннулировать -->
+                            <Button Content="Аннулировать" Command="{Binding Details.ObsoleteCommand}"
+                                    Style="{StaticResource RoundedButtonStyle}"
+                                    Height="32" Padding="16,0" Margin="8,0,0,0"
+                                    Background="White" BorderBrush="#CBD5E1" BorderThickness="1" Foreground="#0F172A" FontSize="13"/>
+
+                            <!-- Кнопка Новая версия (доступна при утвержденном состоянии) -->
+                            <Button Content="Новая версия" Command="{Binding Details.CreateNewVersionCommand}"
+                                    Style="{StaticResource RoundedButtonStyle}"
+                                    Height="32" Padding="14,0" Margin="8,0,0,0"
+                                    Background="White" BorderBrush="#CBD5E1" BorderThickness="1" Foreground="#0F172A" FontSize="13"
+                                    Visibility="{Binding Details.CanCreateNewVersion, Converter={StaticResource BoolToVis}}"/>
+                        </StackPanel>
                     </Grid>
-                </Border>
-            </Grid>
+
+                    <!-- Состав (1-й уровень) -->
+                    <TextBlock Grid.Row="2" Text="Состав (1-й уровень)" FontWeight="Bold" FontSize="14" Foreground="#0F172A" Margin="0,24,0,10"/>
+
+                    <DataGrid Grid.Row="3" ItemsSource="{Binding FirstLevelComponents}" AutoGenerateColumns="False"
+                              IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                              HorizontalGridLinesBrush="#E2E8F0" BorderThickness="0" Background="Transparent"
+                              ColumnHeaderStyle="{StaticResource CompositionHeaderStyle}"
+                              RowStyle="{StaticResource CompositionRowStyle}"
+                              CellStyle="{StaticResource CompositionCellStyle}"
+                              CanUserResizeRows="False" SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Обозначение" Binding="{Binding DesignationDisplay}" Width="150"/>
+                            <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*"/>
+                            <DataGridTextColumn Header="Кол-во" Binding="{Binding Quantity}" Width="80"/>
+                            <DataGridTextColumn Header="Масса 1 шт., кг" Binding="{Binding MassDisplay}" Width="140"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </ScrollViewer>
         </Grid>
 
-        <!-- Нижняя строка состояния -->
-        <Border Grid.Row="2" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="10,6">
+        <!-- Нижняя строка состояния при выполнении импорта -->
+        <Border Grid.Row="3" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="0,1,0,0" Padding="16,6"
+                Visibility="{Binding IsImporting, Converter={StaticResource BoolToVis}}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="200"/>
+                    <ColumnDefinition Width="220"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Column="0" Text="{Binding ImportStatusText}" VerticalAlignment="Center" Foreground="#475569"/>
+                <TextBlock Grid.Column="0" Text="{Binding ImportStatusText}" VerticalAlignment="Center" Foreground="#475569" FontSize="12.5"/>
 
-                <ProgressBar Grid.Column="1" Value="{Binding ImportProgress, Mode=OneWay}" Maximum="100" Height="14" Margin="10,0"
-                             Visibility="{Binding IsImporting, Converter={StaticResource BoolToVis}}"/>
+                <ProgressBar Grid.Column="1" Value="{Binding ImportProgress, Mode=OneWay}" Maximum="100" Height="14" Margin="12,0"/>
 
-                <Button Grid.Column="2" Content="Отмена" Command="{Binding CancelImportCommand}" Height="24" Padding="10,0"
-                        Visibility="{Binding IsImporting, Converter={StaticResource BoolToVis}}"/>
+                <Button Grid.Column="2" Content="Отмена" Command="{Binding CancelImportCommand}"
+                        Style="{StaticResource RoundedButtonStyle}"
+                        Height="26" Padding="12,0" Background="White" BorderBrush="#CBD5E1" BorderThickness="1"
+                        Foreground="#0F172A" FontSize="12"/>
             </Grid>
         </Border>
     </Grid>

@@ -53,7 +53,12 @@ public sealed class ImportService : IImportService
             }
             catch (Exception ex)
             {
-                readErrors.Add(new ImportItemResult(fileName, ImportSeverity.Error, $"Ошибка чтения файла: {ex.Message}"));
+                var errorMsg = ex is FormatException fe
+                    ? fe.Message
+                    : ex is System.Text.Json.JsonException je
+                        ? $"Файл повреждён: некорректная структура JSON (строка {je.LineNumber})"
+                        : $"Ошибка чтения файла: {ex.Message}";
+                readErrors.Add(new ImportItemResult(fileName, ImportSeverity.Error, errorMsg));
             }
         }
 
@@ -170,7 +175,7 @@ public sealed class ImportService : IImportService
                         results[assembly.FileName] = new ImportItemResult(
                             assembly.FileName,
                             ImportSeverity.Error,
-                            $"Компонент '{comp.File}' отклонён");
+                            $"Компонент «{comp.File}» отклонён");
                         validDocs.Remove(assembly.FileName);
                         cascadeChanged = true;
                         break;
@@ -181,7 +186,7 @@ public sealed class ImportService : IImportService
                         results[assembly.FileName] = new ImportItemResult(
                             assembly.FileName,
                             ImportSeverity.Error,
-                            $"Ссылка на отсутствующий файл '{comp.File}'");
+                            $"Ссылка на отсутствующий файл «{comp.File}»");
                         validDocs.Remove(assembly.FileName);
                         cascadeChanged = true;
                         break;

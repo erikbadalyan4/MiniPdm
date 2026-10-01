@@ -13,33 +13,64 @@ public sealed class ItemDetailsViewModel : ViewModelBase
 
     private Item? _item;
     private ItemVersion? _currentVersion;
+    private string? _massOverrideText;
 
     public Item? Item => _item;
     public ItemVersion? CurrentVersion => _currentVersion;
 
-    public string Designation => _item?.Designation?.Value ?? "-";
-    public string Name => _item?.Name ?? "-";
+    public string Designation => _item?.Designation?.Value ?? "—";
+    public string Name => _item?.Name ?? "—";
     public string TypeName => _item?.Type switch
     {
-        ItemType.Assembly => "Сборочная единица",
+        ItemType.Assembly => "Сборка",
         ItemType.Part => "Деталь",
         ItemType.StandardPart => "Стандартное изделие",
-        _ => "-"
+        _ => "—"
     };
 
-    public string VersionNumber => _currentVersion != null ? $"v{_currentVersion.VersionNumber}" : "-";
+    public string Subtitle
+    {
+        get
+        {
+            if (_item == null) return string.Empty;
+            if (_item.Type == ItemType.StandardPart) return "Стандартное изделие";
+            return $"{Designation} · {TypeName}";
+        }
+    }
+
+    public string VersionNumber => _currentVersion != null ? _currentVersion.VersionNumber.ToString() : "—";
     public string StateName => _currentVersion?.State switch
     {
         VersionState.InWork => "В работе",
         VersionState.Approved => "Утверждено",
         VersionState.Obsolete => "Аннулировано",
-        _ => "-"
+        _ => "—"
     };
 
-    public string Material => _currentVersion?.Material ?? "-";
+    public string Material => _currentVersion?.Material ?? "—";
     public string MassKg => _currentVersion?.MassKg.HasValue == true
-        ? $"{_currentVersion.MassKg.Value:F3} кг"
-        : (_item?.Type == ItemType.Assembly ? "Вычисляется по составу" : "Не указана");
+        ? $"{_currentVersion.MassKg.Value:0.##}".Replace('.', ',')
+        : (_item?.Type == ItemType.Assembly ? "— (нажмите «Рассчитать массу»)" : "—");
+
+    public string MassDisplay => _massOverrideText ?? MassKg;
+
+    public void SetCalculatedMass(decimal mass)
+    {
+        _massOverrideText = $"{mass:0.##}".Replace('.', ',');
+        OnPropertyChanged(nameof(MassDisplay));
+    }
+
+    public void SetMassMessage(string message)
+    {
+        _massOverrideText = message;
+        OnPropertyChanged(nameof(MassDisplay));
+    }
+
+    public void ResetCalculatedMass()
+    {
+        _massOverrideText = null;
+        OnPropertyChanged(nameof(MassDisplay));
+    }
 
     public bool CanApprove => _currentVersion?.State == VersionState.InWork;
     public bool CanObsolete => _currentVersion?.State == VersionState.InWork || _currentVersion?.State == VersionState.Approved;
@@ -63,16 +94,19 @@ public sealed class ItemDetailsViewModel : ViewModelBase
     {
         _item = item;
         _currentVersion = currentVersion;
+        _massOverrideText = null;
 
         OnPropertyChanged(nameof(Item));
         OnPropertyChanged(nameof(CurrentVersion));
         OnPropertyChanged(nameof(Designation));
         OnPropertyChanged(nameof(Name));
         OnPropertyChanged(nameof(TypeName));
+        OnPropertyChanged(nameof(Subtitle));
         OnPropertyChanged(nameof(VersionNumber));
         OnPropertyChanged(nameof(StateName));
         OnPropertyChanged(nameof(Material));
         OnPropertyChanged(nameof(MassKg));
+        OnPropertyChanged(nameof(MassDisplay));
         OnPropertyChanged(nameof(CanApprove));
         OnPropertyChanged(nameof(CanObsolete));
         OnPropertyChanged(nameof(CanCreateNewVersion));

@@ -32,6 +32,7 @@ public class FullCadExportImportTests
         var otduhsina = report.Items.FirstOrDefault(i => i.FileName == "Отдушина.m3d");
         otduhsina.Should().NotBeNull();
         otduhsina!.Severity.Should().Be(ImportSeverity.Error);
+        otduhsina.Reason.Should().Contain("Файл повреждён").And.Contain("JSON");
 
         // 2. Деталь без массы (Крышка смотровая.m3d) получила предупреждение
         var kryshka = report.Items.FirstOrDefault(i => i.FileName == "Крышка смотровая.m3d");
