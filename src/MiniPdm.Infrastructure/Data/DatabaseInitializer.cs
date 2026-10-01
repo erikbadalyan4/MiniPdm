@@ -18,9 +18,20 @@ public sealed class DatabaseInitializer : IDatabaseInitializer
 
     public async Task InitializeAsync(CancellationToken ct = default)
     {
-        await using var connection = await _connectionFactory.CreateOpenConnectionAsync(ct);
-        var sql = _connectionFactory.Dialect.GetInitSchemaSql();
-        await connection.ExecuteAsync(new CommandDefinition(sql, cancellationToken: ct));
+        const int maxRetries = 5;
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                await using var connection = await _connectionFactory.CreateOpenConnectionAsync(ct);
+                var sql = _connectionFactory.Dialect.GetInitSchemaSql();
+                await connection.ExecuteAsync(new CommandDefinition(sql, cancellationToken: ct));
+                return;
+            }
+            catch when (attempt < maxRetries)
+            {
+                await Task.Delay(1000, ct);
+            }
+        }
     }
 }
-
