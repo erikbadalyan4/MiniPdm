@@ -125,3 +125,4 @@ public sealed class ItemDetailsViewModel : ViewModelBase
         _onItemChanged();
     }
 }
+

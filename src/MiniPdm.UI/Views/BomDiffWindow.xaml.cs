@@ -16,3 +16,4 @@ public partial class BomDiffWindow : Window
         Close();
     }
 }
+

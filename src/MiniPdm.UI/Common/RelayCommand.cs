@@ -75,3 +75,4 @@ public class AsyncRelayCommand : ICommand
 
     public void RaiseCanExecuteChanged() => CommandManager.InvalidateRequerySuggested();
 }
+

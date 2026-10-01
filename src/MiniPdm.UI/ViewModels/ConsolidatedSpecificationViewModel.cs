@@ -103,3 +103,4 @@ public sealed class ConsolidatedSpecificationViewModel : ViewModelBase
         }
     }
 }
+

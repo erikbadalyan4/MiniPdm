@@ -13,7 +13,7 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
 
         var connectionString = Environment.GetEnvironmentVariable("MINIPDM_CONNECTION_STRING")
-            ?? "Host=localhost;Port=5432;Database=minipdm;Username=postgres;Password=postgres;";
+            ?? "Host=localhost;Port=5433;Database=minipdm;Username=postgres;Password=postgres;";
 
         var providerStr = Environment.GetEnvironmentVariable("MINIPDM_PROVIDER");
         var provider = string.Equals(providerStr, "SqlServer", StringComparison.OrdinalIgnoreCase)
@@ -41,3 +41,4 @@ public partial class App : System.Windows.Application
         mainWindow.Show();
     }
 }
+
