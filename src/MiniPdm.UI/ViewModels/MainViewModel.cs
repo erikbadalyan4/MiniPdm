@@ -72,13 +72,13 @@ public sealed class MainViewModel : ViewModelBase
     public int ImportProgress
     {
         get => _importProgress;
-        private set => SetProperty(ref _importProgress, value);
+        set => SetProperty(ref _importProgress, value);
     }
 
     public string ImportStatusText
     {
         get => _importStatusText;
-        private set => SetProperty(ref _importStatusText, value);
+        set => SetProperty(ref _importStatusText, value);
     }
 
     public bool CanOpenSpecification => SelectedTreeItem != null && SelectedTreeItem.Type == ItemType.Assembly;
