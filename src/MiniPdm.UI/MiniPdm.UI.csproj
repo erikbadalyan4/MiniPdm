@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\MiniPdm.Application\MiniPdm.Application.csproj" />
@@ -7,6 +7,10 @@
 
   <ItemGroup>
     <PackageReference Include="Jab" Version="0.12.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\**\*.png" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -226,8 +226,8 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Иконка лупы -->
-                        <Image Grid.Column="0" Source="/Resources/search-icon.png" Width="14" Height="14"
-                               VerticalAlignment="Center" Margin="0,0,8,0"
+                        <Image Grid.Column="0" Source="pack://application:,,,/MiniPdm.UI;component/Resources/search-icon.png"
+                               Width="15" Height="15" VerticalAlignment="Center" Margin="0,0,8,0"
                                RenderOptions.BitmapScalingMode="HighQuality"/>
 
                         <!-- Текстовое поле ввода -->
