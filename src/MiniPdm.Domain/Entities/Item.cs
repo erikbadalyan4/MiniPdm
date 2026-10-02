@@ -121,14 +121,14 @@ public class Item
     }
 
     /// <summary>
-    /// Получение текущей версии объекта.
+    /// Получение текущей версии объекта (или последней архивной, если все аннулированы).
     /// </summary>
     public ItemVersion? GetCurrentVersion()
     {
-        if (!CurrentVersionId.HasValue)
-            return null;
+        if (CurrentVersionId.HasValue)
+            return _versions.FirstOrDefault(v => v.Id == CurrentVersionId.Value);
 
-        return _versions.FirstOrDefault(v => v.Id == CurrentVersionId.Value);
+        return _versions.OrderByDescending(v => v.VersionNumber).FirstOrDefault();
     }
 
     /// <summary>

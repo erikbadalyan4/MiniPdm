@@ -155,7 +155,7 @@ public sealed class MainViewModel : ViewModelBase
                     item.Type,
                     item.Designation,
                     item.Name,
-                    item.CurrentVersionId,
+                    item.GetCurrentVersion()?.Id,
                     quantity: 1,
                     _queryRepository,
                     isRoot: true);

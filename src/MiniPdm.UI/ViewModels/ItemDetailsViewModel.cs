@@ -134,9 +134,7 @@ public sealed class ItemDetailsViewModel : ViewModelBase
         await _itemRepository.SaveVersionAsync(_currentVersion);
         await _itemRepository.UpdateAsync(_item);
 
-        var nextCurrent = _item.CurrentVersionId.HasValue
-            ? await _itemRepository.GetVersionByIdAsync(_item.CurrentVersionId.Value)
-            : null;
+        var nextCurrent = _item.GetCurrentVersion();
 
         SetItem(_item, nextCurrent);
         _onItemChanged();

@@ -73,6 +73,20 @@ public class ItemInvariantsTests
     }
 
     [Fact]
+    public void Obsolete_WhenAllVersionsObsolete_GetCurrentVersionShouldReturnLatestArchivedVersion()
+    {
+        var item = Item.CreatePart(Guid.NewGuid(), _validDesignation, "Вал");
+        var v1 = item.CreateInitialVersion("Сталь 45", 12.5m);
+
+        v1.Obsolete();
+        item.RecalculateCurrentVersion();
+
+        item.CurrentVersionId.Should().BeNull();
+        item.GetCurrentVersion().Should().Be(v1);
+        item.GetCurrentVersion()!.State.Should().Be(VersionState.Obsolete);
+    }
+
+    [Fact]
     public void Assembly_ShouldNotAllowMaterialOrManualMass()
     {
         var item = Item.CreateAssembly(Guid.NewGuid(), _validDesignation, "Редуктор");
