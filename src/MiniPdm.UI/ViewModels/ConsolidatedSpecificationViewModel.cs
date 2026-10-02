@@ -3,10 +3,39 @@ using System.Windows.Input;
 using Microsoft.Win32;
 using MiniPdm.Application.Models.Bom;
 using MiniPdm.Application.Services;
+using MiniPdm.Domain.Enums;
 using MiniPdm.Infrastructure.Export;
 using MiniPdm.UI.Common;
 
 namespace MiniPdm.UI.ViewModels;
+
+public sealed class ConsolidatedSpecificationRowViewModel
+{
+    public string TypeDisplay { get; }
+    public string DesignationDisplay { get; }
+    public string Name { get; }
+    public string MaterialDisplay { get; }
+    public int Quantity { get; }
+    public string UnitMassDisplay { get; }
+    public string TotalMassDisplay { get; }
+
+    public ConsolidatedSpecificationRowViewModel(ConsolidatedBomItem item)
+    {
+        TypeDisplay = item.Type switch
+        {
+            ItemType.Part => "Деталь",
+            ItemType.StandardPart => "Стандартное изделие",
+            ItemType.Assembly => "Сборка",
+            _ => item.Type.ToString()
+        };
+        DesignationDisplay = item.Designation.HasValue ? item.Designation.Value.Value : "—";
+        Name = item.Name;
+        MaterialDisplay = string.IsNullOrWhiteSpace(item.Material) ? "—" : item.Material;
+        Quantity = item.TotalQuantity;
+        UnitMassDisplay = item.UnitMassKg.HasValue ? $"{item.UnitMassKg.Value:0.##}".Replace('.', ',') : "—";
+        TotalMassDisplay = item.TotalMassKg.HasValue ? $"{item.TotalMassKg.Value:0.##}".Replace('.', ',') : "—";
+    }
+}
 
 public sealed class ConsolidatedSpecificationViewModel : ViewModelBase
 {
@@ -20,6 +49,7 @@ public sealed class ConsolidatedSpecificationViewModel : ViewModelBase
 
     public string AssemblyTitle { get; }
     public ObservableCollection<ConsolidatedBomItem> Items { get; } = new();
+    public ObservableCollection<ConsolidatedSpecificationRowViewModel> DisplayItems { get; } = new();
 
     public bool IsLoading
     {
@@ -58,20 +88,25 @@ public sealed class ConsolidatedSpecificationViewModel : ViewModelBase
     public async Task LoadAsync()
     {
         IsLoading = true;
-        StatusMessage = "Выполняется рекурсивный расчет состава...";
+        StatusMessage = "Выполняется рекурсивный расчёт состава...";
 
         try
         {
             var items = await _calculationService.GetConsolidatedSpecificationAsync(_assemblyId);
             Items.Clear();
+            DisplayItems.Clear();
             foreach (var item in items)
+            {
                 Items.Add(item);
+                DisplayItems.Add(new ConsolidatedSpecificationRowViewModel(item));
+            }
 
             var massResult = await _calculationService.CalculateAssemblyMassAsync(_assemblyId);
-            if (massResult.IsSuccess)
+            if (massResult.IsSuccess && massResult.TotalMassKg.HasValue)
             {
                 HasMissingMass = false;
-                StatusMessage = $"Расчетная масса сборки: {massResult.TotalMassKg:F3} кг (позиций: {Items.Count})";
+                var massStr = $"{massResult.TotalMassKg.Value:0.##}".Replace('.', ',');
+                StatusMessage = $"Расчётная масса сборки: {massStr} кг (позиций: {Items.Count})";
             }
             else
             {
@@ -81,7 +116,7 @@ public sealed class ConsolidatedSpecificationViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Ошибка расчета: {ex.Message}";
+            StatusMessage = $"Ошибка расчёта: {ex.Message}";
         }
         finally
         {
@@ -103,4 +138,3 @@ public sealed class ConsolidatedSpecificationViewModel : ViewModelBase
         }
     }
 }
-

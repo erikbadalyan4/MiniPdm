@@ -3,9 +3,53 @@ using System.Windows.Input;
 using MiniPdm.Application.Models.Bom;
 using MiniPdm.Application.Services;
 using MiniPdm.Domain.Entities;
+using MiniPdm.Domain.Enums;
 using MiniPdm.UI.Common;
 
 namespace MiniPdm.UI.ViewModels;
+
+public sealed class BomDiffRowViewModel
+{
+    public string KindDisplay { get; }
+    public string KindColor { get; }
+    public string TypeDisplay { get; }
+    public string DesignationDisplay { get; }
+    public string Name { get; }
+    public int? OldQuantity { get; }
+    public int? NewQuantity { get; }
+
+    public BomDiffRowViewModel(BomDiffItem item)
+    {
+        KindDisplay = item.Kind switch
+        {
+            BomDiffKind.Added => "Добавлено",
+            BomDiffKind.Removed => "Удалено",
+            BomDiffKind.QuantityChanged => "Изменено кол-во",
+            _ => item.Kind.ToString()
+        };
+
+        KindColor = item.Kind switch
+        {
+            BomDiffKind.Added => "#16A34A",
+            BomDiffKind.Removed => "#DC2626",
+            BomDiffKind.QuantityChanged => "#2563EB",
+            _ => "#0F172A"
+        };
+
+        TypeDisplay = item.Type switch
+        {
+            ItemType.Part => "Деталь",
+            ItemType.StandardPart => "Стандартное изделие",
+            ItemType.Assembly => "Сборка",
+            _ => item.Type.ToString()
+        };
+
+        DesignationDisplay = item.Designation.HasValue ? item.Designation.Value.Value : "—";
+        Name = item.Name;
+        OldQuantity = item.OldQuantity;
+        NewQuantity = item.NewQuantity;
+    }
+}
 
 public sealed class BomDiffViewModel : ViewModelBase
 {
@@ -46,6 +90,7 @@ public sealed class BomDiffViewModel : ViewModelBase
     }
 
     public ObservableCollection<BomDiffItem> Changes { get; } = new();
+    public ObservableCollection<BomDiffRowViewModel> DisplayChanges { get; } = new();
 
     public BomDiffViewModel(Item assembly, IBomDiffService diffService)
     {
@@ -77,8 +122,12 @@ public sealed class BomDiffViewModel : ViewModelBase
             var diff = await _diffService.CompareVersionsAsync(_selectedVersion1.Id, _selectedVersion2.Id);
 
             Changes.Clear();
+            DisplayChanges.Clear();
             foreach (var change in diff.Changes)
+            {
                 Changes.Add(change);
+                DisplayChanges.Add(new BomDiffRowViewModel(change));
+            }
 
             SummaryText = $"Добавлено: {diff.AddedCount} | Удалено: {diff.RemovedCount} | Изменено количество: {diff.ModifiedCount}";
         }
@@ -88,4 +137,3 @@ public sealed class BomDiffViewModel : ViewModelBase
         }
     }
 }
-

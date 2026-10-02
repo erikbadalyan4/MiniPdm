@@ -96,8 +96,8 @@
         </Grid.RowDefinitions>
 
         <!-- Верхняя шапка окна -->
-        <Border Grid.Row="0" Background="#EDF0F5" Height="46" Padding="20,0" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
-            <TextBlock Text="Отчёт об импорте" FontWeight="Bold" FontSize="15" Foreground="#0F172A" VerticalAlignment="Center"/>
+        <Border Grid.Row="0" Background="White" Height="46" Padding="20,0" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+            <TextBlock Text="Отчёт об импорте" FontWeight="Bold" FontSize="16" Foreground="#0F172A" VerticalAlignment="Center"/>
         </Border>
 
         <!-- Основная область окна -->
@@ -183,8 +183,8 @@
 
                 <!-- Фильтр -->
                 <ComboBox Grid.Column="0" ItemsSource="{Binding FilterOptions}" SelectedItem="{Binding SelectedFilter}"
-                          Width="180" Height="32" VerticalContentAlignment="Center" Background="White"
-                          BorderBrush="#CBD5E1" FontSize="12.5" Padding="8,0"/>
+                          Style="{StaticResource ModernComboBoxStyle}"
+                          Width="180" Height="32"/>
 
                 <!-- Кнопки справа -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
@@ -201,3 +201,4 @@
         </Grid>
     </Grid>
 </Window>
+

@@ -6,79 +6,148 @@
         xmlns:vm="clr-namespace:MiniPdm.UI.ViewModels"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:BomDiffViewModel}"
-        Title="Сравнение версий сборочной единицы" Height="500" Width="800"
-        WindowStartupLocation="CenterOwner" FontFamily="Segoe UI">
-    <Grid Margin="12">
+        Title="Сравнение версий сборочной единицы" Height="560" Width="880"
+        WindowStartupLocation="CenterOwner" Background="White" FontFamily="Segoe UI">
+
+    <Window.Resources>
+        <!-- Стилизация заголовка таблицы -->
+        <Style x:Key="DiffHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#F1F5F9"/>
+            <Setter Property="Foreground" Value="#0F172A"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border Background="{TemplateBinding Background}" BorderThickness="0" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Стилизация строк таблицы -->
+        <Style x:Key="DiffRowStyle" TargetType="DataGridRow">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F8FAFC"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#EFF6FF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Стилизация ячеек таблицы -->
+        <Style x:Key="DiffCellStyle" TargetType="DataGridCell">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Foreground" Value="#0F172A"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="Transparent" BorderThickness="0" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
         <Grid.RowDefinitions>
+            <!-- 0: Шапка окна -->
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <!-- 1: Основная область -->
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Text="{Binding AssemblyName, StringFormat='Сборка: {0}'}" FontWeight="Bold" FontSize="15" Margin="0,0,0,10"/>
-
-        <!-- Селекторы версий -->
-        <Border Grid.Row="1" Background="#F1F5F9" Padding="10" CornerRadius="4" Margin="0,0,0,10">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="30"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="150"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <TextBlock Grid.Column="0" Text="Версия А:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <ComboBox Grid.Column="1" ItemsSource="{Binding AvailableVersions}" SelectedItem="{Binding SelectedVersion1}"
-                          DisplayMemberPath="VersionNumber"/>
-
-                <TextBlock Grid.Column="2" Text="→" VerticalAlignment="Center" HorizontalAlignment="Center" FontWeight="Bold"/>
-
-                <TextBlock Grid.Column="3" Text="Версия Б:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <ComboBox Grid.Column="4" ItemsSource="{Binding AvailableVersions}" SelectedItem="{Binding SelectedVersion2}"
-                          DisplayMemberPath="VersionNumber"/>
-
-                <TextBlock Grid.Column="5" Text="{Binding SummaryText}" VerticalAlignment="Center" Margin="15,0,0,0" FontWeight="SemiBold" Foreground="#334155"/>
-            </Grid>
+        <!-- Верхняя шапка окна -->
+        <Border Grid.Row="0" Background="White" Height="46" Padding="20,0" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+            <TextBlock Text="Сравнение версий сборочной единицы" FontWeight="Bold" FontSize="16" Foreground="#0F172A" VerticalAlignment="Center"/>
         </Border>
 
-        <!-- Таблица различий -->
-        <DataGrid Grid.Row="2" ItemsSource="{Binding Changes}" AutoGenerateColumns="False" 
-                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                  AlternatingRowBackground="#FAFAFA" BorderBrush="#E2E8F0" RowHeight="28">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Действие" Binding="{Binding Kind}" Width="140">
-                    <DataGridTextColumn.ElementStyle>
-                        <Style TargetType="TextBlock">
-                            <Style.Triggers>
-                                <Trigger Property="Text" Value="Added">
-                                    <Setter Property="Foreground" Value="#16A34A"/>
-                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                </Trigger>
-                                <Trigger Property="Text" Value="Removed">
-                                    <Setter Property="Foreground" Value="#DC2626"/>
-                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                </Trigger>
-                                <Trigger Property="Text" Value="QuantityChanged">
-                                    <Setter Property="Foreground" Value="#2563EB"/>
-                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </DataGridTextColumn.ElementStyle>
-                </DataGridTextColumn>
-                <DataGridTextColumn Header="Тип" Binding="{Binding Type}" Width="120"/>
-                <DataGridTextColumn Header="Обозначение" Binding="{Binding Designation.Value}" Width="150"/>
-                <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*"/>
-                <DataGridTextColumn Header="Было (шт)" Binding="{Binding OldQuantity}" Width="90"/>
-                <DataGridTextColumn Header="Стало (шт)" Binding="{Binding NewQuantity}" Width="90"/>
-            </DataGrid.Columns>
-        </DataGrid>
+        <!-- Основная область окна -->
+        <Grid Grid.Row="1" Margin="20,16,20,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <Button Grid.Row="3" Content="Закрыть" Width="100" Height="30" HorizontalAlignment="Right" 
-                Margin="0,10,0,0" IsCancel="True" Click="CloseButton_Click"/>
+            <!-- Обозначение и наименование сборки -->
+            <TextBlock Grid.Row="0" Text="{Binding AssemblyName, StringFormat='Сборка: {0}'}"
+                       Foreground="#64748B" FontSize="13" Margin="0,0,0,12"/>
+
+            <!-- Селекторы версий и сводка -->
+            <Border Grid.Row="1" Background="#F8FAFC" BorderBrush="#E2E8F0" BorderThickness="1" CornerRadius="6" Padding="14,10" Margin="0,0,0,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="130"/>
+                        <ColumnDefinition Width="32"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="130"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="Версия А:" Foreground="#475569" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <ComboBox Grid.Column="1" ItemsSource="{Binding AvailableVersions}" SelectedItem="{Binding SelectedVersion1}"
+                              DisplayMemberPath="VersionNumber" Style="{StaticResource ModernComboBoxStyle}" Height="30"/>
+
+                    <TextBlock Grid.Column="2" Text="→" Foreground="#94A3B8" FontWeight="Bold" FontSize="13" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+                    <TextBlock Grid.Column="3" Text="Версия Б:" Foreground="#475569" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <ComboBox Grid.Column="4" ItemsSource="{Binding AvailableVersions}" SelectedItem="{Binding SelectedVersion2}"
+                              DisplayMemberPath="VersionNumber" Style="{StaticResource ModernComboBoxStyle}" Height="30"/>
+
+                    <Border Grid.Column="5" Background="#F1F5F9" CornerRadius="12" Padding="12,4" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding SummaryText}" Foreground="#334155" FontSize="12.5" FontWeight="SemiBold"/>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- Таблица различий -->
+            <DataGrid Grid.Row="2" ItemsSource="{Binding DisplayChanges}" AutoGenerateColumns="False" 
+                      IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="#F1F5F9" BorderThickness="0" Background="Transparent"
+                      ColumnHeaderStyle="{StaticResource DiffHeaderStyle}"
+                      RowStyle="{StaticResource DiffRowStyle}"
+                      CellStyle="{StaticResource DiffCellStyle}"
+                      CanUserResizeRows="False" SelectionMode="Single">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Header="Действие" Width="140">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding KindDisplay}" Foreground="{Binding KindColor}"
+                                           FontWeight="SemiBold" FontSize="12.5" VerticalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Тип" Binding="{Binding TypeDisplay}" Width="120"/>
+                    <DataGridTextColumn Header="Обозначение" Binding="{Binding DesignationDisplay}" Width="150"/>
+                    <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*"/>
+                    <DataGridTextColumn Header="Было, шт." Binding="{Binding OldQuantity}" Width="90"/>
+                    <DataGridTextColumn Header="Стало, шт." Binding="{Binding NewQuantity}" Width="90"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Кнопка закрытия -->
+            <Button Grid.Row="3" Content="Закрыть" Style="{StaticResource ModernRoundedButtonStyle}"
+                    Background="#2563EB" Foreground="White" FontWeight="SemiBold"
+                    Height="32" Padding="22,0" FontSize="12.5" HorizontalAlignment="Right" Margin="0,16,0,0"
+                    IsCancel="True" Click="CloseButton_Click"/>
+        </Grid>
     </Grid>
 </Window>
-

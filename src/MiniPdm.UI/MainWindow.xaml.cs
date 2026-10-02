@@ -70,4 +70,12 @@ public partial class MainWindow : Window
             win.ShowDialog();
         };
     }
+
+    private void CompositionTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+    {
+        if (e.NewValue is BomTreeItemViewModel vm)
+        {
+            _viewModel.SelectedTreeItem = vm;
+        }
+    }
 }

@@ -9,7 +9,7 @@ namespace MiniPdm.UI.ViewModels;
 
 public sealed class BomTreeItemViewModel : ViewModelBase
 {
-    private static readonly BomTreeItemViewModel DummyChild = new(Guid.Empty, ItemType.Part, null, "Загрузка...", null, 0);
+    private static readonly BomTreeItemViewModel DummyChild = new(Guid.Empty, ItemType.Part, null, string.Empty, null, 0);
 
     private readonly IBomQueryRepository? _queryRepository;
     private readonly bool _isRoot;
@@ -31,6 +31,7 @@ public sealed class BomTreeItemViewModel : ViewModelBase
     {
         get
         {
+            if (ObjectId == Guid.Empty) return string.Empty;
             var prefix = Designation.HasValue ? $"{Designation.Value} " : string.Empty;
             var qty = (!_isRoot && Quantity > 0) ? $" ×{Quantity}" : string.Empty;
             return $"{prefix}{Name}{qty}";
@@ -108,7 +109,8 @@ public sealed class BomTreeItemViewModel : ViewModelBase
                     c.Name,
                     c.CurrentVersionId,
                     c.Quantity,
-                    _queryRepository);
+                    _queryRepository,
+                    isRoot: false);
 
                 Children.Add(childVm);
             }

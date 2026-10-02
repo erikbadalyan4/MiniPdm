@@ -6,55 +6,146 @@
         xmlns:vm="clr-namespace:MiniPdm.UI.ViewModels"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:ConsolidatedSpecificationViewModel}"
-        Title="Сводная спецификация и расчет массы" Height="550" Width="850"
-        WindowStartupLocation="CenterOwner" FontFamily="Segoe UI">
-    <Grid Margin="12">
+        Title="Сводная спецификация и расчет массы" Height="580" Width="920"
+        WindowStartupLocation="CenterOwner" Background="White" FontFamily="Segoe UI">
+    
+    <Window.Resources>
+        <!-- Стилизация заголовка таблицы -->
+        <Style x:Key="SpecHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Background" Value="#F1F5F9"/>
+            <Setter Property="Foreground" Value="#0F172A"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridColumnHeader">
+                        <Border Background="{TemplateBinding Background}" BorderThickness="0" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Стилизация строк таблицы -->
+        <Style x:Key="SpecRowStyle" TargetType="DataGridRow">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F8FAFC"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#EFF6FF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Стилизация ячеек таблицы -->
+        <Style x:Key="SpecCellStyle" TargetType="DataGridCell">
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="Foreground" Value="#0F172A"/>
+            <Setter Property="FontSize" Value="12.5"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="Transparent" BorderThickness="0" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
         <Grid.RowDefinitions>
+            <!-- 0: Шапка окна -->
             <RowDefinition Height="Auto"/>
+            <!-- 1: Основная область -->
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- Заголовок и статус -->
-        <Border Grid.Row="0" Background="#F8FAFC" Padding="12" CornerRadius="4" Margin="0,0,0,10" BorderBrush="#E2E8F0" BorderThickness="1">
-            <StackPanel>
-                <TextBlock Text="{Binding AssemblyTitle, StringFormat='Сборка: {0}'}" FontWeight="Bold" FontSize="15" Margin="0,0,0,4"/>
-                <TextBlock Text="{Binding StatusMessage}" FontSize="13">
+        <!-- Верхняя шапка окна -->
+        <Border Grid.Row="0" Background="White" Height="46" Padding="20,0" BorderBrush="#E2E8F0" BorderThickness="0,0,0,1">
+            <TextBlock Text="Сводная спецификация и расчет массы" FontWeight="Bold" FontSize="16" Foreground="#0F172A" VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Основная область окна -->
+        <Grid Grid.Row="1" Margin="20,16,20,16">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Обозначение и наименование сборки -->
+            <TextBlock Grid.Row="0" Text="{Binding AssemblyTitle, StringFormat='Сборка: {0}'}"
+                       Foreground="#64748B" FontSize="13" Margin="0,0,0,10"/>
+
+            <!-- Плашка статуса / итога расчета -->
+            <Border Grid.Row="1" CornerRadius="12" Padding="14,4" HorizontalAlignment="Left" Margin="0,0,0,16">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="#DCFCE7"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding HasMissingMass}" Value="True">
+                                <Setter Property="Background" Value="#FEF9C3"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <TextBlock Text="{Binding StatusMessage}" FontWeight="SemiBold" FontSize="12.5">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
-                            <Setter Property="Foreground" Value="#1E293B"/>
+                            <Setter Property="Foreground" Value="#15803D"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding HasMissingMass}" Value="True">
-                                    <Setter Property="Foreground" Value="#DC2626"/>
-                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                    <Setter Property="Foreground" Value="#A16207"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </TextBlock.Style>
                 </TextBlock>
+            </Border>
+
+            <!-- Таблица спецификации -->
+            <DataGrid Grid.Row="2" ItemsSource="{Binding DisplayItems}" AutoGenerateColumns="False" 
+                      IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="#F1F5F9" BorderThickness="0" Background="Transparent"
+                      ColumnHeaderStyle="{StaticResource SpecHeaderStyle}"
+                      RowStyle="{StaticResource SpecRowStyle}"
+                      CellStyle="{StaticResource SpecCellStyle}"
+                      CanUserResizeRows="False" SelectionMode="Single">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Тип" Binding="{Binding TypeDisplay}" Width="120"/>
+                    <DataGridTextColumn Header="Обозначение" Binding="{Binding DesignationDisplay}" Width="150"/>
+                    <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*"/>
+                    <DataGridTextColumn Header="Материал" Binding="{Binding MaterialDisplay}" Width="110"/>
+                    <DataGridTextColumn Header="Кол-во" Binding="{Binding Quantity}" Width="80"/>
+                    <DataGridTextColumn Header="Масса 1 шт., кг" Binding="{Binding UnitMassDisplay}" Width="120"/>
+                    <DataGridTextColumn Header="Общая масса, кг" Binding="{Binding TotalMassDisplay}" Width="120"/>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Панель кнопок снизу -->
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
+                <Button Content="Экспорт в CSV..." Command="{Binding ExportCommand}"
+                        Style="{StaticResource ModernRoundedButtonStyle}"
+                        Background="White" BorderBrush="#CBD5E1" BorderThickness="1" Foreground="#334155"
+                        Height="32" Padding="16,0" Margin="0,0,10,0" FontSize="12.5"/>
+
+                <Button Content="Закрыть" Style="{StaticResource ModernRoundedButtonStyle}"
+                        Background="#2563EB" Foreground="White" FontWeight="SemiBold"
+                        Height="32" Padding="22,0" FontSize="12.5" IsCancel="True" Click="CloseButton_Click"/>
             </StackPanel>
-        </Border>
-
-        <!-- Таблица спецификации -->
-        <DataGrid Grid.Row="1" ItemsSource="{Binding Items}" AutoGenerateColumns="False" 
-                  IsReadOnly="True" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
-                  AlternatingRowBackground="#FAFAFA" BorderBrush="#E2E8F0" RowHeight="28">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Тип" Binding="{Binding Type}" Width="120"/>
-                <DataGridTextColumn Header="Обозначение" Binding="{Binding Designation.Value}" Width="150"/>
-                <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*"/>
-                <DataGridTextColumn Header="Материал" Binding="{Binding Material}" Width="120"/>
-                <DataGridTextColumn Header="Количество" Binding="{Binding TotalQuantity}" Width="90"/>
-                <DataGridTextColumn Header="Масса 1 шт (кг)" Binding="{Binding UnitMassKg, StringFormat='{}{0:F3}'}" Width="110"/>
-                <DataGridTextColumn Header="Общая масса (кг)" Binding="{Binding TotalMassKg, StringFormat='{}{0:F3}'}" Width="120"/>
-            </DataGrid.Columns>
-        </DataGrid>
-
-        <!-- Панель кнопок -->
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
-            <Button Content="Экспорт в CSV..." Command="{Binding ExportCommand}" Width="140" Height="30" Margin="0,0,10,0"/>
-            <Button Content="Закрыть" Width="100" Height="30" IsCancel="True" Click="CloseButton_Click"/>
-        </StackPanel>
+        </Grid>
     </Grid>
 </Window>
-
