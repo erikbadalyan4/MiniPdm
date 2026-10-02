@@ -7,7 +7,8 @@
         xmlns:common="clr-namespace:MiniPdm.UI.Common"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:ConsolidatedSpecificationViewModel}"
-        Title="Сводная спецификация и расчет массы" Height="580" Width="920"
+        Title="Сводная спецификация и расчет массы" Height="600" Width="1080"
+        MinWidth="950" MinHeight="450"
         WindowStartupLocation="CenterOwner" Background="White" FontFamily="Segoe UI"
         common:WindowHelper.RemoveIcon="True">
     
@@ -125,13 +126,14 @@
                       ColumnHeaderStyle="{StaticResource SpecHeaderStyle}"
                       RowStyle="{StaticResource SpecRowStyle}"
                       CellStyle="{StaticResource SpecCellStyle}"
+                      CanUserResizeColumns="True"
                       CanUserResizeRows="False" SelectionMode="Single">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Тип" Binding="{Binding TypeDisplay}" Width="150"/>
-                    <DataGridTextColumn Header="Обозначение" Binding="{Binding DesignationDisplay}" Width="150"/>
+                    <DataGridTextColumn Header="Тип" Binding="{Binding TypeDisplay}" Width="140"/>
+                    <DataGridTextColumn Header="Обозначение" Binding="{Binding DesignationDisplay}" Width="140"/>
                     <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*"/>
                     <DataGridTextColumn Header="Материал" Binding="{Binding MaterialDisplay}" Width="110"/>
-                    <DataGridTextColumn Header="Кол-во" Binding="{Binding Quantity}" Width="80"/>
+                    <DataGridTextColumn Header="Кол-во" Binding="{Binding Quantity}" Width="70"/>
                     <DataGridTextColumn Header="Масса 1 шт., кг" Binding="{Binding UnitMassDisplay}" Width="120"/>
                     <DataGridTextColumn Header="Общая масса, кг" Binding="{Binding TotalMassDisplay}" Width="120"/>
                 </DataGrid.Columns>

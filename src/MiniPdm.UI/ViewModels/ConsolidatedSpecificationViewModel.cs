@@ -32,8 +32,8 @@ public sealed class ConsolidatedSpecificationRowViewModel
         Name = item.Name;
         MaterialDisplay = string.IsNullOrWhiteSpace(item.Material) ? "—" : item.Material;
         Quantity = item.TotalQuantity;
-        UnitMassDisplay = item.UnitMassKg.HasValue ? $"{item.UnitMassKg.Value:0.##}".Replace('.', ',') : "—";
-        TotalMassDisplay = item.TotalMassKg.HasValue ? $"{item.TotalMassKg.Value:0.##}".Replace('.', ',') : "—";
+        UnitMassDisplay = item.UnitMassKg.HasValue ? $"{item.UnitMassKg.Value:0.####}".Replace('.', ',') : "—";
+        TotalMassDisplay = item.TotalMassKg.HasValue ? $"{item.TotalMassKg.Value:0.####}".Replace('.', ',') : "—";
     }
 }
 

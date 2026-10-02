@@ -7,7 +7,8 @@
         xmlns:common="clr-namespace:MiniPdm.UI.Common"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:BomDiffViewModel}"
-        Title="Сравнение версий сборочной единицы" Height="560" Width="880"
+        Title="Сравнение версий сборочной единицы" Height="580" Width="1000"
+        MinWidth="880" MinHeight="450"
         WindowStartupLocation="CenterOwner" Background="White" FontFamily="Segoe UI"
         common:WindowHelper.RemoveIcon="True">
 
@@ -127,6 +128,7 @@
                       ColumnHeaderStyle="{StaticResource DiffHeaderStyle}"
                       RowStyle="{StaticResource DiffRowStyle}"
                       CellStyle="{StaticResource DiffCellStyle}"
+                      CanUserResizeColumns="True"
                       CanUserResizeRows="False" SelectionMode="Single">
                 <DataGrid.Columns>
                     <DataGridTemplateColumn Header="Действие" Width="140">
@@ -137,11 +139,11 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Тип" Binding="{Binding TypeDisplay}" Width="150"/>
-                    <DataGridTextColumn Header="Обозначение" Binding="{Binding DesignationDisplay}" Width="150"/>
+                    <DataGridTextColumn Header="Тип" Binding="{Binding TypeDisplay}" Width="140"/>
+                    <DataGridTextColumn Header="Обозначение" Binding="{Binding DesignationDisplay}" Width="140"/>
                     <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*"/>
-                    <DataGridTextColumn Header="Было, шт." Binding="{Binding OldQuantity}" Width="90"/>
-                    <DataGridTextColumn Header="Стало, шт." Binding="{Binding NewQuantity}" Width="90"/>
+                    <DataGridTextColumn Header="Было, шт." Binding="{Binding OldQuantity}" Width="85"/>
+                    <DataGridTextColumn Header="Стало, шт." Binding="{Binding NewQuantity}" Width="85"/>
                 </DataGrid.Columns>
             </DataGrid>
 
