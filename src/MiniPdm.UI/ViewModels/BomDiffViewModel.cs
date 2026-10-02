@@ -25,6 +25,7 @@ public sealed class BomDiffRowViewModel
             BomDiffKind.Added => "Добавлено",
             BomDiffKind.Removed => "Удалено",
             BomDiffKind.QuantityChanged => "Изменено кол-во",
+            BomDiffKind.Unchanged => "Без изменений",
             _ => item.Kind.ToString()
         };
 
@@ -33,7 +34,8 @@ public sealed class BomDiffRowViewModel
             BomDiffKind.Added => "#16A34A",
             BomDiffKind.Removed => "#DC2626",
             BomDiffKind.QuantityChanged => "#2563EB",
-            _ => "#0F172A"
+            BomDiffKind.Unchanged => "#64748B",
+            _ => "#64748B"
         };
 
         TypeDisplay = item.Type switch

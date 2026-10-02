@@ -127,7 +127,7 @@
                       CellStyle="{StaticResource SpecCellStyle}"
                       CanUserResizeRows="False" SelectionMode="Single">
                 <DataGrid.Columns>
-                    <DataGridTextColumn Header="Тип" Binding="{Binding TypeDisplay}" Width="120"/>
+                    <DataGridTextColumn Header="Тип" Binding="{Binding TypeDisplay}" Width="150"/>
                     <DataGridTextColumn Header="Обозначение" Binding="{Binding DesignationDisplay}" Width="150"/>
                     <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*"/>
                     <DataGridTextColumn Header="Материал" Binding="{Binding MaterialDisplay}" Width="110"/>

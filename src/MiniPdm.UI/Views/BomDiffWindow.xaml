@@ -137,7 +137,7 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Тип" Binding="{Binding TypeDisplay}" Width="120"/>
+                    <DataGridTextColumn Header="Тип" Binding="{Binding TypeDisplay}" Width="150"/>
                     <DataGridTextColumn Header="Обозначение" Binding="{Binding DesignationDisplay}" Width="150"/>
                     <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" Width="*"/>
                     <DataGridTextColumn Header="Было, шт." Binding="{Binding OldQuantity}" Width="90"/>
