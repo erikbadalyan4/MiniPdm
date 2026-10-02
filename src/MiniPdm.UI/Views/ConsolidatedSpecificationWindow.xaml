@@ -4,10 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:MiniPdm.UI.ViewModels"
+        xmlns:common="clr-namespace:MiniPdm.UI.Common"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:ConsolidatedSpecificationViewModel}"
         Title="Сводная спецификация и расчет массы" Height="580" Width="920"
-        WindowStartupLocation="CenterOwner" Background="White" FontFamily="Segoe UI">
+        WindowStartupLocation="CenterOwner" Background="White" FontFamily="Segoe UI"
+        common:WindowHelper.RemoveIcon="True">
     
     <Window.Resources>
         <!-- Стилизация заголовка таблицы -->
@@ -149,3 +151,4 @@
         </Grid>
     </Grid>
 </Window>
+

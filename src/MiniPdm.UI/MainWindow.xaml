@@ -4,10 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:MiniPdm.UI.ViewModels"
+        xmlns:common="clr-namespace:MiniPdm.UI.Common"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:MainViewModel}"
         Title="Мини-PDM — Состав изделия" Height="720" Width="1080"
-        WindowStartupLocation="CenterScreen" Background="White" FontFamily="Segoe UI">
+        WindowStartupLocation="CenterScreen" Background="White" FontFamily="Segoe UI"
+        common:WindowHelper.RemoveIcon="True">
     
     <Window.InputBindings>
         <KeyBinding Key="F5" Command="{Binding RefreshCommand}"/>
@@ -224,8 +226,9 @@
                         </Grid.ColumnDefinitions>
 
                         <!-- Иконка лупы -->
-                        <TextBlock Grid.Column="0" Text="🔍" FontSize="12" Foreground="#94A3B8" 
-                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <Image Grid.Column="0" Source="/Resources/search-icon.png" Width="14" Height="14"
+                               VerticalAlignment="Center" Margin="0,0,8,0"
+                               RenderOptions.BitmapScalingMode="HighQuality"/>
 
                         <!-- Текстовое поле ввода -->
                         <TextBox Grid.Column="1" x:Name="SearchBox"

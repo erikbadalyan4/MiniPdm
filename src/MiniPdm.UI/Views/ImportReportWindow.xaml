@@ -4,10 +4,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:MiniPdm.UI.ViewModels"
+        xmlns:common="clr-namespace:MiniPdm.UI.Common"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance vm:ImportReportViewModel}"
         Title="Отчёт об импорте" Height="500" Width="820"
-        WindowStartupLocation="CenterOwner" Background="White" FontFamily="Segoe UI">
+        WindowStartupLocation="CenterOwner" Background="White" FontFamily="Segoe UI"
+        common:WindowHelper.RemoveIcon="True">
     
     <Window.Resources>
         <!-- Стилизация кнопок со скруглением -->
