@@ -40,6 +40,57 @@ public class FullCadExportImportTests
         kryshka!.Severity.Should().Be(ImportSeverity.Warning);
     }
 
+    [Fact]
+    public async Task RepeatImport_CadExportV2_AfterApproval_ShouldCreateVersion2ForChangedItemsOnly()
+    {
+        var basePath = AppContext.BaseDirectory;
+        var folder1 = Path.GetFullPath(Path.Combine(basePath, "../../../../cad-export"));
+        var folder2 = Path.GetFullPath(Path.Combine(basePath, "../../../../cad-export-v2"));
+
+        if (!Directory.Exists(folder1) || !Directory.Exists(folder2))
+            return;
+
+        var repo = new MemoryItemRepository();
+        var uow = new MemoryUnitOfWork();
+        var reader = new JsonCadDocumentReader();
+        var importer = new ImportService(reader, repo, uow);
+
+        // 1. Первый импорт
+        var report1 = await importer.ImportFolderAsync(folder1);
+        report1.AcceptedCount.Should().Be(38);
+
+        // 2. Утверждаем все принятые версии
+        foreach (var v in repo.Versions.ToList())
+        {
+            v.Approve();
+        }
+
+        // 3. Повторный импорт v2
+        var report2 = await importer.ImportFolderAsync(folder2);
+        report2.Items.Should().NotBeEmpty();
+
+        // Колесо зубчатое: создана версия 2 с новой массой 5.92 кг
+        var gear = repo.Items.FirstOrDefault(i => i.Name == "Колесо зубчатое");
+        gear.Should().NotBeNull();
+        gear!.Versions.Should().HaveCount(2);
+
+        // Крышка подшипника в сборе: создана версия 2
+        var coverAssy = repo.Items.FirstOrDefault(i => i.Name == "Крышка подшипника в сборе");
+        coverAssy.Should().NotBeNull();
+        coverAssy!.Versions.Should().HaveCount(2);
+
+        // Проверяем связи версии 1 (3 прокладки) и версии 2 (4 прокладки)
+        var v1 = coverAssy.Versions.First(v => v.VersionNumber == 1);
+        var v2 = coverAssy.Versions.First(v => v.VersionNumber == 2);
+
+        var linksV1 = await repo.GetBomLinksByVersionIdAsync(v1.Id);
+        var linksV2 = await repo.GetBomLinksByVersionIdAsync(v2.Id);
+
+        var gasket = repo.Items.First(i => i.Name == "Прокладка регулировочная");
+        linksV1.First(l => l.ChildObjectId == gasket.Id).Quantity.Should().Be(3);
+        linksV2.First(l => l.ChildObjectId == gasket.Id).Quantity.Should().Be(4);
+    }
+
     private class MemoryItemRepository : IItemRepository
     {
         public readonly List<Item> Items = new();

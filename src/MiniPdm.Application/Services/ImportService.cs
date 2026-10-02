@@ -219,15 +219,14 @@ public sealed class ImportService : IImportService
         await _unitOfWork.BeginTransactionAsync(ct);
         try
         {
-            // Карта соответствия fileName -> Item для создания BOM-связей
             var fileToItemMap = new Dictionary<string, Item>(StringComparer.OrdinalIgnoreCase);
 
-            // Сначала импортируем детали и стандартные изделия, затем сборки
-            var sortedDocs = validDocs.Values
-                .OrderBy(d => string.Equals(d.Type, nameof(ItemType.Assembly), StringComparison.OrdinalIgnoreCase) ? 1 : 0)
+            // 6.1. Сначала обрабатываем детали и стандартные изделия
+            var nonAssemblyDocs = validDocs.Values
+                .Where(d => !string.Equals(d.Type, nameof(ItemType.Assembly), StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            foreach (var doc in sortedDocs)
+            foreach (var doc in nonAssemblyDocs)
             {
                 ct.ThrowIfCancellationRequested();
                 var itemType = Enum.Parse<ItemType>(doc.Type, true);
@@ -241,10 +240,8 @@ public sealed class ImportService : IImportService
 
                 if (existing == null)
                 {
-                    // Новый объект
                     var newItem = itemType switch
                     {
-                        ItemType.Assembly => Item.CreateAssembly(Guid.NewGuid(), designation!.Value, doc.Name),
                         ItemType.Part => Item.CreatePart(Guid.NewGuid(), designation!.Value, doc.Name),
                         ItemType.StandardPart => Item.CreateStandardPart(Guid.NewGuid(), doc.Name),
                         _ => throw new InvalidOperationException()
@@ -259,54 +256,124 @@ public sealed class ImportService : IImportService
                 }
                 else
                 {
-                    // Повторный импорт
                     fileToItemMap[doc.FileName] = existing;
-                    var currentVersion = existing.CurrentVersionId.HasValue
-                        ? await _itemRepository.GetVersionByIdAsync(existing.CurrentVersionId.Value, ct)
-                        : null;
+                    var currentVersion = existing.GetCurrentVersion();
 
-                    bool propertiesChanged = currentVersion == null ||
-                                             currentVersion.Material != doc.Properties.Material ||
-                                             currentVersion.MassKg != doc.Properties.Mass;
-
-                    if (propertiesChanged)
+                    if (currentVersion == null)
                     {
-                        if (currentVersion == null || currentVersion.State == VersionState.InWork)
+                        var newVersion = existing.CreateInitialVersion(doc.Properties.Material, doc.Properties.Mass);
+                        await _itemRepository.SaveVersionAsync(newVersion, ct);
+                        await _itemRepository.UpdateAsync(existing, ct);
+                    }
+                    else
+                    {
+                        bool propertiesChanged = currentVersion.Material != doc.Properties.Material ||
+                                                 currentVersion.MassKg != doc.Properties.Mass;
+
+                        if (propertiesChanged)
                         {
-                            currentVersion?.UpdateProperties(doc.Properties.Material, doc.Properties.Mass);
-                            if (currentVersion != null)
+                            if (currentVersion.State == VersionState.InWork)
+                            {
+                                currentVersion.UpdateProperties(doc.Properties.Material, doc.Properties.Mass);
                                 await _itemRepository.SaveVersionAsync(currentVersion, ct);
-                        }
-                        else if (currentVersion.State == VersionState.Approved)
-                        {
-                            var newVersion = existing.CreateNextVersion(doc.Properties.Material, doc.Properties.Mass);
-                            await _itemRepository.SaveVersionAsync(newVersion, ct);
-                            await _itemRepository.UpdateAsync(existing, ct);
+                            }
+                            else
+                            {
+                                var newVersion = existing.CreateNextVersion(doc.Properties.Material, doc.Properties.Mass);
+                                await _itemRepository.SaveVersionAsync(newVersion, ct);
+                                await _itemRepository.UpdateAsync(existing, ct);
+                            }
                         }
                     }
                 }
             }
 
-            // Создание и обновление BOM-связей для сборок
+            // 6.2. Гарантируем регистрацию всех сборок в базе и словаре fileToItemMap
             var assemblyDocs = validDocs.Values
-                .Where(d => string.Equals(d.Type, nameof(ItemType.Assembly), StringComparison.OrdinalIgnoreCase));
+                .Where(d => string.Equals(d.Type, nameof(ItemType.Assembly), StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
             foreach (var doc in assemblyDocs)
             {
                 ct.ThrowIfCancellationRequested();
-                var assemblyItem = fileToItemMap[doc.FileName];
-                var versionId = assemblyItem.CurrentVersionId!.Value;
+                var designation = Designation.Create(doc.Designation!);
+                var existing = await _itemRepository.GetByDesignationAsync(designation, ct);
 
-                var links = new List<BomLink>();
-                foreach (var comp in doc.Components)
+                if (existing == null)
                 {
-                    if (fileToItemMap.TryGetValue(comp.File, out var childItem))
+                    var newAssembly = Item.CreateAssembly(Guid.NewGuid(), designation, doc.Name);
+                    await _itemRepository.AddAsync(newAssembly, ct);
+                    fileToItemMap[doc.FileName] = newAssembly;
+                }
+                else
+                {
+                    fileToItemMap[doc.FileName] = existing;
+                }
+            }
+
+            // 6.3. Обрабатываем версии и BOM-связи для каждой сборочной единицы
+            foreach (var doc in assemblyDocs)
+            {
+                ct.ThrowIfCancellationRequested();
+                var assemblyItem = fileToItemMap[doc.FileName];
+                var currentVersion = assemblyItem.GetCurrentVersion();
+
+                var incomingComponents = doc.Components
+                    .Where(c => fileToItemMap.ContainsKey(c.File))
+                    .Select(c => (ChildId: fileToItemMap[c.File].Id, Count: c.Count))
+                    .ToList();
+
+                if (currentVersion == null)
+                {
+                    var version = assemblyItem.CreateInitialVersion();
+                    await _itemRepository.SaveVersionAsync(version, ct);
+                    await _itemRepository.UpdateAsync(assemblyItem, ct);
+
+                    var links = incomingComponents
+                        .Select(c => new BomLink(Guid.NewGuid(), version.Id, c.ChildId, c.Count))
+                        .ToList();
+                    await _itemRepository.SaveBomLinksAsync(version.Id, links, ct);
+                }
+                else
+                {
+                    var existingLinks = await _itemRepository.GetBomLinksByVersionIdAsync(currentVersion.Id, ct);
+
+                    bool linksChanged = existingLinks.Count != incomingComponents.Count;
+                    if (!linksChanged)
                     {
-                        links.Add(new BomLink(Guid.NewGuid(), versionId, childItem.Id, comp.Count));
+                        var existingMap = existingLinks.ToDictionary(l => l.ChildObjectId, l => l.Quantity);
+                        foreach (var inc in incomingComponents)
+                        {
+                            if (!existingMap.TryGetValue(inc.ChildId, out var existingCount) || existingCount != inc.Count)
+                            {
+                                linksChanged = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (linksChanged)
+                    {
+                        if (currentVersion.State == VersionState.InWork)
+                        {
+                            var links = incomingComponents
+                                .Select(c => new BomLink(Guid.NewGuid(), currentVersion.Id, c.ChildId, c.Count))
+                                .ToList();
+                            await _itemRepository.SaveBomLinksAsync(currentVersion.Id, links, ct);
+                        }
+                        else
+                        {
+                            var newVersion = assemblyItem.CreateNextVersion();
+                            await _itemRepository.SaveVersionAsync(newVersion, ct);
+                            await _itemRepository.UpdateAsync(assemblyItem, ct);
+
+                            var links = incomingComponents
+                                .Select(c => new BomLink(Guid.NewGuid(), newVersion.Id, c.ChildId, c.Count))
+                                .ToList();
+                            await _itemRepository.SaveBomLinksAsync(newVersion.Id, links, ct);
+                        }
                     }
                 }
-
-                await _itemRepository.SaveBomLinksAsync(versionId, links, ct);
             }
 
             await _unitOfWork.CommitAsync(ct);
