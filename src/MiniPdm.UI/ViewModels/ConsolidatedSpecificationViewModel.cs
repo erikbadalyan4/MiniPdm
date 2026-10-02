@@ -102,10 +102,15 @@ public sealed class ConsolidatedSpecificationViewModel : ViewModelBase
             }
 
             var massResult = await _calculationService.CalculateAssemblyMassAsync(_assemblyId);
-            if (massResult.IsSuccess && massResult.TotalMassKg.HasValue)
+            if (Items.Count == 0)
+            {
+                HasMissingMass = true;
+                StatusMessage = "Сборка аннулирована либо не содержит действующих компонентов. Аннулированные версии исключены из расчётов по требованиям ЕСКД.";
+            }
+            else if (massResult.IsSuccess && massResult.TotalMassKg.HasValue)
             {
                 HasMissingMass = false;
-                var massStr = $"{massResult.TotalMassKg.Value:0.##}".Replace('.', ',');
+                var massStr = $"{massResult.TotalMassKg.Value:0.####}".Replace('.', ',');
                 StatusMessage = $"Расчётная масса сборки: {massStr} кг (позиций: {Items.Count})";
             }
             else
