@@ -252,6 +252,8 @@ public sealed class MainViewModel : ViewModelBase
         ImportStatusText = "Запуск импорта...";
         _importCts = new CancellationTokenSource();
 
+        Serilog.Log.Information("Старт импорта файлов из папки {FolderPath}", folder);
+
         var progressHandler = new Progress<ImportProgress>(p =>
         {
             ImportProgress = p.TotalCount > 0 ? (int)((double)p.ProcessedCount / p.TotalCount * 100) : 0;
@@ -262,16 +264,19 @@ public sealed class MainViewModel : ViewModelBase
         {
             var report = await _importService.ImportFolderAsync(folder, progressHandler, _importCts.Token);
             ImportStatusText = $"Импорт завершен: принято {report.AcceptedCount}, ошибок {report.RejectedCount}";
+            Serilog.Log.Information("Импорт из папки {FolderPath} успешно завершен. Принято: {AcceptedCount}, Ошибок: {RejectedCount}", folder, report.AcceptedCount, report.RejectedCount);
             await LoadRootItemsAsync();
             ShowImportReportAction?.Invoke(report, folder);
         }
         catch (OperationCanceledException)
         {
             ImportStatusText = "Импорт отменен пользователем.";
+            Serilog.Log.Warning("Импорт из папки {FolderPath} был отменен пользователем", folder);
         }
         catch (Exception ex)
         {
             ImportStatusText = $"Ошибка при импорте: {ex.Message}";
+            Serilog.Log.Error(ex, "Ошибка при выполнении импорта из папки {FolderPath}", folder);
         }
         finally
         {
@@ -283,6 +288,7 @@ public sealed class MainViewModel : ViewModelBase
 
     private void CancelImport()
     {
+        Serilog.Log.Information("Запрошена отмена операции импорта");
         _importCts?.Cancel();
     }
 
